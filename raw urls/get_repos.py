@@ -17,19 +17,23 @@ credentials = ''.join(open('credentials.csv').readlines()).split(',')
 
 g = Github(credentials[0].strip(), credentials[1].strip())
 
-url_file = open('urls_' + str(counter+1) + '.txt', 'w+')
 
 url_buffer = []
+last_id = None
 
-for repo in g.get_repos(since = since):
-    url_buffer.append( repo.html_url + '\n' )
+while True:
+    url_file = open('urls_' + str(counter+1) + '.txt', 'w+')
+    for repo in g.get_repos(since = since):
+        url_buffer.append( repo.html_url + '\n' )
 
-    if len(url_buffer) > 1000:
-        url_file.writelines(url_buffer)
-        counter += len(url_buffer)
-        new_counter += len(url_buffer)
-        url_buffer = []
-        print 'URLs written:', counter, 'Last id:', repo.id
-        time.sleep(SLEEP_TIME_SECS)
-    if new_counter >= QUIT_COUNTER:
-        quit()
+        if len(url_buffer) > 1000:
+            url_file.writelines(url_buffer)
+            counter += len(url_buffer)
+            new_counter += len(url_buffer)
+            url_buffer = []
+            last_id = repo.id
+            print 'URLs written:', counter, 'Last id:', last_id
+            time.sleep(SLEEP_TIME_SECS)
+        if new_counter >= QUIT_COUNTER:
+            since = last_id
+            break
