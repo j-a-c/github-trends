@@ -6,10 +6,10 @@ SLEEP_TIME_SECS = 1
 QUIT_COUNTER = 50000
 
 # Since
-since = 1810567
+since = 2533539
 
 # Counters
-counter = 706706
+counter = 1015014
 new_counter = 0
 
 # A CSV file with username,password for your Github
