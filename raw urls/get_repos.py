@@ -2,14 +2,14 @@ import time
 
 from github import Github
 
-SLEEP_TIME_SECS = 1
+#SLEEP_TIME_SECS = 1
 QUIT_COUNTER = 50000
 
 # Since
-since = 2916227
+since = 3280930
 
 # Counter
-counter = 1185184
+counter = 1349348
 
 # A CSV file with username,password for your Github
 credentials = ''.join(open('credentials.csv').readlines()).split(',')
@@ -36,4 +36,4 @@ while True:
             if new_counter >= QUIT_COUNTER:
                 since = last_id
                 break
-            time.sleep(SLEEP_TIME_SECS)
+            #time.sleep(SLEEP_TIME_SECS)
