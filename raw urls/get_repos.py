@@ -8,10 +8,10 @@ SLEEP_TIME_SECS = 1
 QUIT_COUNTER = 50000
 
 # Since
-since = 12255409
+since = 15502262
 
 # Counter
-counter = 6059053
+counter = 7908901
 
 # A CSV file with username,password for your Github
 credentials = ''.join(open('credentials.csv').readlines()).split(',')
