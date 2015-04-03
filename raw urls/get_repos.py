@@ -8,10 +8,10 @@ SLEEP_TIME_SECS = 1
 QUIT_COUNTER = 50000
 
 # 'Since' parameter for Github repository pagination API
-since = 22882453
+since = 23444567
 
 # Counter for total number of URLs received.
-counter = 12401389
+counter = 12756744
 
 # A CSV file with username,password for your Github
 credentials = ''.join(open('credentials.csv').readlines()).split(',')
