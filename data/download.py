@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
             if len(readme_links) == 1:
 
-                raw_readme_link = readme_link[0]
+                raw_readme_link = readme_links[0]
 
                 # Remove 'blob/' from link. It starts at the third '/'.
                 blob_slash_index = raw_readme_link.find('/')
