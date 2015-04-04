@@ -8,20 +8,24 @@ from archive_iterator import ArchiveIterator
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 
-ERROR_FILE = 'errors.txt'
-LOG_FILE = 'log.txt'
+# Number of workers for parallel README downloads.
+NUM_WORKERS = 4
+
+# Do not change this, it is used to get the raw README.
 RAW_PREFIX = 'https://raw.githubusercontent.com'
-TEMP_DIR = 'DOWNLOAD_TEMP_DIR'
+
+# The number of READMEs to include per archive.
 FILES_PER_ARCHIVE = 25000
 
-SLEEP_TIME_SECS = 3 * 60
+# Sleep time between jobs.
+SLEEP_TIME_SECS = 30
 
-# Used for tracking consecutive URL open errors.
-URL_ERROR_SLEEP_TIME_SEC = 5 * 60
-MAX_CONSEC_URL_ERRORS = 10
-consec_url_errors = 0
-
+# Used internally to track state.
+ERROR_FILE = 'errors.txt'
+LOG_FILE = 'log.txt'
 ERROR_FILE_LOCK = threading.Lock()
+# Downloads will be stored here.
+TEMP_DIR = 'DOWNLOAD_TEMP_DIR'
 
 
 def download_readme(url, counter, errors, log):
@@ -126,10 +130,14 @@ if __name__ == '__main__':
 
     files_to_compress = []
 
-    # See if job was stopped early.
+    # If no temporary directory exists..
     if not os.path.exists(TEMP_DIR):
         os.mkdir(TEMP_DIR)
-    else:
+        # See if any archives have been completed.
+        completed_indices = [int(a.split('.')[0]) for a in os.listdir('.') if a.endswith('.7z')]
+        if len(completed_indices) > 0:
+            START_INDEX = max(completed_indices)
+    else: # See where we stopped last.
         files_to_compress = [os.path.join(TEMP_DIR,f) for f in os.listdir(TEMP_DIR)]
         START_INDEX = max([int(f.split('.')[0]) for f in os.listdir(TEMP_DIR)])
         START_INDEX += 1 # Skip the previously written file.
@@ -163,7 +171,7 @@ if __name__ == '__main__':
             counter += 1
         
         print 'Starting thread pool.'
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
             for url,counter in urls_to_download:
                 executor.submit(download_readme, url, counter, errors, log)
                 output_path = os.path.join(TEMP_DIR, str(counter) + '.md')
