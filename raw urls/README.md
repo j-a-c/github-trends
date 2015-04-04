@@ -10,3 +10,7 @@ This script uses PyGithub to request Github repositories. A CSV file, _credentia
 
 This script compresses the repository URLs downloaded using _get_repos.py_ into the archive format currently in this repository. It can be used to update the archives with new URLs.
 
+## validate.py
+
+Script to validate raw URLs retrieve using _get_repos.py_. This is will print duplicate urls.
+
