@@ -63,20 +63,32 @@ def download_readme(url, counter, errors, log):
 
             raw_readme_link = RAW_PREFIX + raw_readme_link[:blob_slash_index] + raw_readme_link[blob_slash_index+5:]
 
+            # Try to get the README
             raw_readme = None
             try:
                 raw_readme = urllib2.urlopen(raw_readme_link).read()
             except:
-                ERROR_FILE_LOCK.acquire()
-                error = url + ' Error reading URL: ' + raw_readme_link +'. Position: ' + str(counter) + '\n'
-                errors.write(error)
-                ERROR_FILE_LOCK.release()
+                if raw_readme_link.endswith('.'):
+                    try:
+                        raw_readme = urllib2.urlopen(raw_readme_link[:-1]).read()
+                    except:
+                        ERROR_FILE_LOCK.acquire()
+                        error = url + ' Error reading URL: ' + raw_readme_link +'. Position: ' + str(counter) + '\n'
+                        errors.write(error)
+                        ERROR_FILE_LOCK.release()
+                else:
+                    ERROR_FILE_LOCK.acquire()
+                    error = url + ' Error reading URL: ' + raw_readme_link +'. Position: ' + str(counter) + '\n'
+                    errors.write(error)
+                    ERROR_FILE_LOCK.release()
 
-            output_path = os.path.join(TEMP_DIR, str(counter) + '.md')
+            # Save the README if it has been read
+            if raw_readme:
+                output_path = os.path.join(TEMP_DIR, str(counter) + '.md')
 
-            output = open(output_path, 'w+')
-            output.write(raw_readme)
-            output.close()
+                output = open(output_path, 'w+')
+                output.write(raw_readme)
+                output.close()
 
         # Somehow 2+ READMEs were found.
         else:
