@@ -13,6 +13,17 @@ FILES_PER_ARCHIVE = 10000
 
 SLEEP_TIME_SECS = 1 * 60
 
+START_INDEX = 0
+
+
+# Used for tracking consecutive URL open errors.
+URL_ERROR_SLEEP_TIME_SEC = 5 * 60
+MAX_CONSEC_URL_ERRORS = 10
+consec_url_errors = 0
+
+
+counter = 0
+
 if __name__ == '__main__':
     errors = open(ERROR_FILE, 'a')
 
@@ -22,16 +33,22 @@ if __name__ == '__main__':
     archives = [ os.path.join(archive_dir, str(i) + 'm.7z') for i in range(1,17) ]
     iterator = ArchiveIterator(archives)
 
-    counter = 0
     files_to_compress = []
 
+    # See if job was stopped early.
     if not os.path.exists(TEMP_DIR):
         os.mkdir(TEMP_DIR)
+    else:
+        files_to_compress = [os.path.join(TEMP_DIR,f) for f in os.listdir(TEMP_DIR)]
+        START_INDEX = max([int(f.split('.')[0]) for f in os.listdir(TEMP_DIR)])
 
     for url in iterator:
+        if counter < START_INDEX:
+            counter += 1
+            continue
+
         # Open github page.
         url = url.strip()
-        url = 'https://github.com/rubinius/rubinius'
         response = urllib2.urlopen(url)
         html = response.read()
         soup = BeautifulSoup(html)
@@ -71,6 +88,11 @@ if __name__ == '__main__':
                     error = url + ' Error reading URL: ' + raw_readme_link +'. Position: ' + str(counter) + '\n'
                     errors.write(error)
 
+                    consec_url_errors += 1
+                    if consec_url_errors >= MAX_CONSEC_URL_ERRORS:
+                        consec_url_errors = 0
+                        time.sleep(URL_ERROR_SLEEP_TIME_SEC)
+
                 output_path = os.path.join(TEMP_DIR, str(counter) + '.md')
                 files_to_compress.append(output_path)
 
@@ -78,9 +100,11 @@ if __name__ == '__main__':
                 output.write(raw_readme)
                 output.close()
 
+                consec_url_errors = 0
+
             # Somehow 2+ READMEs were found.
             else:
-                error = url + ' Two many READMEs found. Position: ' + str(counter) + '\n'
+                error = url + ' Too many READMEs found. Position: ' + str(counter) + '\n'
                 errors.write(error)
  
         # No README was found
@@ -89,7 +113,6 @@ if __name__ == '__main__':
             errors.write(error)
         
         counter += 1
-        quit()
         
         if counter % FILES_PER_ARCHIVE == 0:
 
