@@ -14,7 +14,7 @@ NUM_WORKERS = 4
 # Do not change this, it is used to get the raw README.
 RAW_PREFIX = 'https://raw.githubusercontent.com'
 
-# The number of READMEs to include per archive.
+# The number of READMEs to retrieve this run.
 FILES_PER_RUN = 100000
 
 # Sleep time between jobs.
