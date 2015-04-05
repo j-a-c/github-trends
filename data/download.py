@@ -15,7 +15,7 @@ NUM_WORKERS = 4
 RAW_PREFIX = 'https://raw.githubusercontent.com'
 
 # The number of READMEs to include per archive.
-FILES_PER_ARCHIVE = 25000
+FILES_PER_RUN = 100000
 
 # Sleep time between jobs.
 SLEEP_TIME_SECS = 30
@@ -114,7 +114,7 @@ def download_readme(url, counter, errors, log):
 
 
 if __name__ == '__main__':
-    total_urls = 15493189
+    # total_urls = 15493189
 
     START_INDEX = 0
     counter = 0
@@ -143,8 +143,11 @@ if __name__ == '__main__':
         START_INDEX += 1 # Skip the previously written file.
         print 'Adjusting start index to:', START_INDEX
 
-    STOP_INDEX = START_INDEX + FILES_PER_ARCHIVE - ((START_INDEX + FILES_PER_ARCHIVE) % FILES_PER_ARCHIVE)
+    STOP_INDEX = START_INDEX + FILES_PER_RUN - ((START_INDEX + FILES_PER_RUN) % FILES_PER_RUN)
     urls_to_download = []
+
+    print 'Start index', START_INDEX
+    print 'Stop index', STOP_INDEX
 
     # Load any incompleted jobs.
     incompleted_jobs = set()
@@ -157,45 +160,21 @@ if __name__ == '__main__':
         else:
             incompleted_jobs.remove(job)
 
-    while START_INDEX < total_urls:
 
-        for url in iterator:
-            if counter < START_INDEX and counter not in incompleted_jobs:
-                counter += 1
-                continue
-
-            if counter == STOP_INDEX :
-                break;
-            
-            urls_to_download.append( (url.strip(), counter) )
+    for url in iterator:
+        if counter < START_INDEX and counter not in incompleted_jobs:
             counter += 1
+            continue
+
+        if counter == STOP_INDEX :
+            break;
         
-        print 'Starting thread pool.'
-        with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
-            for url,counter in urls_to_download:
-                executor.submit(download_readme, url, counter, errors, log)
-                output_path = os.path.join(TEMP_DIR, str(counter) + '.md')
-                files_to_compress.append(output_path)
-        
-
-        print 'Compressiong files.'
-        # Compress current downloads.
-        command = '7z a ' + str(counter) + '.7z'
-        for f in files_to_compress:
-            # Include ./ before file name to not include the temporary directory
-            # name in the archive.
-            command += ' .' + os.path.sep + f
-        os.system(command)
-
-        shutil.rmtree(TEMP_DIR)
-        os.mkdir(TEMP_DIR)
-        os.system('rm ' + LOG_FILE)
-
-        counter = 0
-        files_to_compress = []
-        incompleted_jobs.clear()
-        START_INDEX = STOP_INDEX
-        STOP_INDEX = START_INDEX + FILES_PER_ARCHIVE
-
-        time.sleep(SLEEP_TIME_SECS)
-
+        urls_to_download.append( (url.strip(), counter) )
+        counter += 1
+    
+    print 'Starting thread pool.'
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        for url,counter in urls_to_download:
+            executor.submit(download_readme, url, counter, errors, log)
+            output_path = os.path.join(TEMP_DIR, str(counter) + '.md')
+            files_to_compress.append(output_path)
