@@ -17,7 +17,7 @@ if __name__ == '__main__':
     if not os.path.exists(RAW):
         os.mkdir(RAW)
     for i in range(1,17):
-        os.path.join(RAW, directory = str(i) + 'm')
+        directory = os.path.join(RAW, str(i) + 'm')
         if not os.path.exists(directory):
             os.mkdir(directory)
 
