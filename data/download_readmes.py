@@ -123,8 +123,7 @@ if __name__ == '__main__':
     log = open(LOG_FILE, 'a')
 
     # Construct the archive iterator
-    archive_dir = '..' + os.path.sep
-    archive_dir = os.path.join(archive_dir, 'urls')
+    archive_dir = os.path.join('..', 'urls', archive)
     archives = [ os.path.join(archive_dir, str(i) + 'm.7z') for i in range(1,17) ]
     iterator = ArchiveIterator(archives)
 
