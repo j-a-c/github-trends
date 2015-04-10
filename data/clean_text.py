@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
             dirty_path = os.path.join(root, f)
             # clean_path is the same as dirty_path, except DIRTY_ROOT/... is now CLEAN_ROOT/...
-            clean_path = os.path.join(CLEAN_ROOT, os.path.sep.join(dirty_path.split(os.path.sep)[1:]), f)
+            clean_path = os.path.join(CLEAN_ROOT, os.path.sep.join(dirty_path.split(os.path.sep)[1:]))
             
             readme = open(dirty_path).readlines()
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
                 readme = ' '.join(readme)
 
                 # Write README
-                clean_file = open(clean_path), 'w+')
+                clean_file = open(clean_path, 'w+')
                 # Don't forget to decode('utf-8') when reading later!
                 clean_file.write(readme.encode('utf-8'))
                 clean_file.close()
