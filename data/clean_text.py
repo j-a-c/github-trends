@@ -28,10 +28,10 @@ if __name__ == '__main__':
     num_archives_cleaned = 0
 
     # Clean all READMEs in the dirty folder.
-    for root, dirs, files in os.walk(DIRTY_ROOT):
-        for f in files:
+    for d in os.listdir(DIRTY_ROOT):
+        for f in os.listdir(os.path.join(DIRTY_ROOT, d)):
 
-            dirty_path = os.path.join(root, f)
+            dirty_path = os.path.join(DIRTY_ROOT, d, f)
             # clean_path is the same as dirty_path, except DIRTY_ROOT/... is now CLEAN_ROOT/...
             clean_path = os.path.join(CLEAN_ROOT, os.path.sep.join(dirty_path.split(os.path.sep)[1:]))
             
