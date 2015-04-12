@@ -78,6 +78,13 @@ def get_features(url, counter):
                 readme_title = s.nextSibling.strip()
         except:
             pass
+
+    # In case we did not get the README name.
+    if not readme_title:
+        features.append(EMPTY)
+        features.append(EMPTY)
+        return features
+    
     # Get README commit dates.
     readme_commit_url = url + '/commits/master/' + readme_title
     readme_commit_html = None
@@ -88,10 +95,11 @@ def get_features(url, counter):
 
     if readme_commit_html:
         readme_commit_soup = BeautifulSoup(readme_commit_html)
-        # Find the first commit.
         timestamps = readme_commit_soup.find_all('time')
+        # Find the most recent README commit.
         latest_commit = timestamps[0]['datetime']
         features.append(latest_commit)
+        # Find the first README commit.
         first_commit = timestamps[-1]['datetime']
         features.append(first_commit)
     else:
