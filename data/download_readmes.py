@@ -3,7 +3,7 @@ import shutil
 import time
 import urllib2
 
-from url_iterator import URLIterator
+from url_iterator import SortedDirectoryIterator
 from bs4 import BeautifulSoup
 
 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         if not os.path.exists(d):
             os.mkdir(d)
 
-    iterator = URLIterator(os.path.join('..', 'urls', 'raw'))
+    iterator = SortedDirectoryIterator(os.path.join('..', 'urls', 'raw'))
 
     counter = 0
     for url in iterator:

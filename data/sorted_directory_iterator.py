@@ -1,6 +1,6 @@
 import os
 
-class URLIterator(object):
+class SortedDirectoryIterator(object):
     def __init__(self, d):
         self.files = [os.path.join(d,p) for p in os.listdir(d)]
         self.files.sort(key = lambda p: int(p.split(os.path.sep)[-1].split('.')[0]))
@@ -32,6 +32,19 @@ class URLIterator(object):
                 return self.lines[self.current_line_index-1].strip()
             else:
                 return self._get_line_from_next_file()
+
+
+if __name__ == '__main__':
+    target = 10000003
+
+    iterator = SortedDirectoryIterator(os.path.join('..', 'urls', 'raw'))
+
+    counter = 0
+    for url in iterator:
+        if counter == target:
+            print url
+            break
+        counter += 1
             
             
             

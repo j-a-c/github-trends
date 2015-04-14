@@ -4,7 +4,7 @@ import json
 import urllib2
 
 
-from url_iterator import URLIterator
+from sorted_directory_iterator import SortedDirectoryIterator
 from bs4 import BeautifulSoup
 
 EMPTY = '_'
@@ -128,7 +128,7 @@ if __name__ == '__main__':
         os.mkdir(META_DIR)
 
     # Construct URL iterator.
-    iterator = URLIterator(os.path.join('..', 'urls', 'raw'))
+    iterator = SortedDirectoryIterator(os.path.join('..', 'urls', 'raw'))
 
     # Get README index.
     all_readmes = json.load(open(README_INDEX_LIST_FILE))
