@@ -4,12 +4,15 @@ class SortedDirectoryIterator(object):
     def __init__(self, d):
         self.files = [os.path.join(d,p) for p in os.listdir(d)]
         self.files.sort(key = lambda p: int(p.split(os.path.sep)[-1].split('.')[0]))
-        self.lines = None
 
+        self.lines = None
         self.current_file_index = -1
         self.current_line_index = -1
 
     def __iter__(self):
+        self.lines = None
+        self.current_file_index = -1
+        self.current_line_index = -1
         return self
 
     def _get_line_from_next_file(self):
