@@ -19,7 +19,7 @@ def dump_to_disk(temp_index, index):
             if token in current_index:
                 current_index[token].extend(temp_index[token])
             else:
-                current_index[token] = [temp_index[token]]
+                current_index[token] = temp_index[token]
         else:
             # Save previous work
             if current_index:

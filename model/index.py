@@ -93,10 +93,13 @@ class Index(object):
             The inverted index entry for that token, or an empty list of one
             does not exist.
         """
-        token_hash = self.index_hash(token)
+        try:
+            token_hash = self.index_hash(token)
+        except:
+            return []
         
         if token_hash in self.cache_contents:
-            return self.index_cache[token]
+            return self.fix_bug(self.index_cache[token])
         else:
             temp_path = self.get_index_name(token)
 
@@ -106,8 +109,18 @@ class Index(object):
             temp_index = json.load(open(temp_path))
 
             if token in temp_index:
-                return temp_index[token]
+                return self.fix_bug(temp_index[token])
             else: return []
+
+    def fix_bug(self, entry):
+        """
+        We need to use this method due to a bug in the build index code.
+        The index code is fixed, but we will need to rebuild the index before
+        removing this code.
+        """
+        new_entry = entry[0]
+        new_entry.extend(entry[1:])
+        return new_entry
 
     def __iter__(self):
         """
@@ -135,16 +148,30 @@ class IndexIterator(object):
     def __init__(self, index):
         self.index = index
         self.files = os.listdir(index.index_dir)
-        self.file_index = 0
+        self.file_index = -1
+        self.key_index = -1
+        self.keys = None
+
+    def _load_next_index(self):
+        self.file_index += 1
+
+        if not self.file_index < len(self.files):
+            raise StopIteration
+
+        next_index_path = os.path.join(self.index.index_dir, self.files[self.file_index])
+        self.keys = json.load(open(next_index_path)).keys() 
+        self.key_index = 1
+        return self.keys[self.key_index-1]
 
     def next(self):
-        while self.file_index < len(self.files):
-            next_index_path = os.path.join(index.index_dir, self.files[self.file_index])
-            next_index = json.load(open(next_index_path))
-            for key in next_index:
-                yield key
-            self.file_index += 1
-        raise StopIteration
+        if not self.keys:
+            return self._load_next_index()
+        else:
+            if self.key_index < len(self.keys):
+                self.key_index += 1
+                return self.keys[self.key_index-1]
+            else:
+                return self._load_next_index()
 
 if __name__ == '__main__':
 
@@ -167,14 +194,18 @@ if __name__ == '__main__':
     print len(index.get('a'))
     print len(index.get('linux'))
     print len(index.get('zebra'))
+    print len(index.get('destroyaliens'))
     print 'Time to query:', time.time() - t0
-    
+
     quit()
 
     '''
     # Iterating over the keys in the index.
     for key in index:
-        pass
+        try:
+            print key.decode('utf-8')
+        except:
+            pass
     '''
 
     '''
