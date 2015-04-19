@@ -34,7 +34,7 @@ def predict_stopwords(inv_idx, num_docs, output_file):
         # Attempt to add to heap.
         if len(nidf_heap) < NUM_KEEP_THRESHOLD:
             heapq.heappush(nidf_heap, (nidf,token) )
-        elif nidf < heap[0][0]:
+        elif nidf > nidf_heap[0][0]:
             heapq.heappushpop(nidf_heap, (nidf,token))
 
         # Entropy
@@ -50,7 +50,7 @@ def predict_stopwords(inv_idx, num_docs, output_file):
         # Attempt to add to heap.
         if len(entropies_heap) < NUM_KEEP_THRESHOLD:
             heapq.heappush(entropies_heap, (entropy,token) )
-        elif entropy < heap[0][0]:
+        elif entropy > entropies_heap[0][0]:
             heapq.heappushpop(entropies_heap, (entropy,token))
             
         num_tokens_processed += 1
