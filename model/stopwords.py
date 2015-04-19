@@ -65,8 +65,8 @@ if __name__ == '__main__':
     output_file = 'stopwords.json'
     
     index_dir = 'index'
-    # 10 MB
-    memory_cache_limit = 10e6
+    # 250 MB
+    memory_cache_limit = 250e6
 
     print 'Building index.'
     index = Index(index_dir, memory_cache_limit)

@@ -27,6 +27,9 @@ class Index(object):
         self.cache_contents = set()
         self.index_cache = collections.defaultdict(list)
 
+        self.lru = None
+        self.lru_hash = None
+
         if cache_memory_limit:
             paths = [os.path.join(index_dir,p) for p in os.listdir(index_dir)]
             paths.sort(key=lambda p: os.path.getsize(p), reverse=True)
@@ -40,7 +43,7 @@ class Index(object):
 
                 temp_index = json.load(open(path))
                 for key in temp_index:
-                    self.index_cache = temp_index[key]
+                    self.index_cache[key] = temp_index[key]
                 self.cache_contents.add(self.get_hash_from_filename(path))
 
             print 'Number of indexes loaded:', len(self.cache_contents)
@@ -100,16 +103,21 @@ class Index(object):
         
         if token_hash in self.cache_contents:
             return self.fix_bug(self.index_cache[token])
+        elif self.lru and token_hash == self.lru_hash:
+            if token in self.lru:
+                return self.fix_bug(self.lru[token])
+            else: return []
         else:
             temp_path = self.get_index_name(token)
 
             if not os.path.isfile(temp_path):
                 return []
             
-            temp_index = json.load(open(temp_path))
+            self.lru = json.load(open(temp_path))
+            self.lru_hash = self.get_hash_from_filename(temp_path)
 
-            if token in temp_index:
-                return self.fix_bug(temp_index[token])
+            if token in self.lru:
+                return self.fix_bug(self.lru[token])
             else: return []
 
     def fix_bug(self, entry):
