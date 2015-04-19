@@ -54,6 +54,7 @@ print 'Creating dictionary...'
 
 dict_start_time = time.clock()
 dictionary = gensim.corpora.Dictionary(text for text,_ in MyCorpus(IMPORT_DIR))
+dictionary.save('dictionary.dict')
 
 print '\t', dictionary
 print '\tTime to create dictionary:', time.clock() - dict_start_time
