@@ -11,14 +11,14 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 Parameters
 """
 
-IMPORT_DIR = 'generated_docs'
+IMPORT_DIR = os.path.join('..', 'data', 'clean')
 
 CORPORA_PATH = 'corpus.mm'
 DICTIONARY_PATH = 'dictionary.dict'
 
 # Model parameters
-NUM_TOPICS = 38 # The number of topics to find.
-NUM_PASSES = 2500 # The number of passes to make over the corpus.
+NUM_TOPICS = 50 # The number of topics to find.
+NUM_PASSES = 1 # The number of passes to make over the corpus.
 
 # Filter parameters
 FILTER = False
