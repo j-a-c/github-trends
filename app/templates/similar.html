@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+
+    <b>Original README:</b>
+    <pre>
+{{original_readme}}
+    </pre>
+    
+    <b>Similar repositories:</b>
+    <br/>
+    {% for repo in similar_repos %}
+        {{repo}} <br/>
+    {% endfor %}
+{% endblock %}

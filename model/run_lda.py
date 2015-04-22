@@ -1,8 +1,8 @@
 import collections
 import gensim
+import json
 import logging
 import os
-import json
 import time
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -11,24 +11,26 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 Parameters
 """
 
-IMPORT_DIR = os.path.join('..', 'data', 'clean')
+IMPORT_DIR = os.path.join('..', 'data', 'lda_sample')
 
+# Temporary data structure parameters.
 CORPORA_PATH = 'corpus.mm'
 DICTIONARY_PATH = 'dictionary.dict'
 
 # Model parameters
-NUM_TOPICS = 50 # The number of topics to find.
-NUM_PASSES = 1 # The number of passes to make over the corpus.
+NUM_TOPICS = 500 # The number of topics to find.
+NUM_PASSES = 100 # The number of passes to make over the corpus.
 
 # Filter parameters
-FILTER = False
-NO_BELOW = 1
-NO_ABOVE = 1.0 * 499 / 2740 # The max cluster size.
+FILTER = True
+NO_BELOW = 2
+NO_ABOVE = 0.10
 
 # Output parameters
-N_TOP_WORDS = 10 # The number of top words to show per topic.
+N_TOP_WORDS = 50 # The number of top words to show per topic.
 TOPIC_FILE = 'topics.txt'
 CLASSIFICATION_PATH = 'classes.txt'
+CLASSIFY_INPUT_DOCS = False
 
 """
 Lazy iterator for accessing files. This allows us to access the files without
@@ -113,6 +115,15 @@ lda_model = gensim.models.ldamodel.LdaModel(corpus=mm, num_topics=NUM_TOPICS, \
 print '\tTime to train', time.clock() - train_start_time
 
 ###
+# Save the model.
+###
+    
+print '====='
+print 'Saving model...'
+    
+lda_model.save('lda_model.mod')
+    
+###
 # Write the topics.
 ###
 
@@ -136,14 +147,15 @@ topic_writer.close()
 print '====='
 print 'Classifying documents...'
 
-classification_writer = open(CLASSIFICATION_PATH, 'w+')
-for text,path in MyCorpus(IMPORT_DIR):
-    classification_text = path + ' '
-    for topic, percent in lda_model[dictionary.doc2bow(text)]:
-        classification_text += str(topic) + ' ' + str(percent) + ' '
-    classification_text += '\n'
-    classification_writer.write(classification_text)
-classification_writer.close()
+if CLASSIFY_INPUT_DOCS:
+    classification_writer = open(CLASSIFICATION_PATH, 'w+')
+    for text,path in MyCorpus(IMPORT_DIR):
+        classification_text = path + ' '
+        for topic, percent in lda_model[dictionary.doc2bow(text)]:
+            classification_text += str(topic) + ' ' + str(percent) + ' '
+        classification_text += '\n'
+        classification_writer.write(classification_text)
+    classification_writer.close()
 
 print '====='
 print 'Total time elapsed:', time.clock() - start_time
