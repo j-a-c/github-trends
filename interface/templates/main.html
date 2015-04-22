@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='main.css') }}">
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-xs-12 top">
+      <div class="title-and-search">
+        <h1 class="text-center proj-title">GitHub Crystal</h1>
+        <span class="subtitle">Is your project a good one?</span>
+        <div class="form-group search-input-container">
+          <input class="form-control search" placeholder="https://github.com/j-a-c/github-trends">
+          <button class="btn btn-primary btn-submit">Find out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+
+{% endblock %}

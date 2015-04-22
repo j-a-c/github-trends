@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<!-- <link rel=stylesheet type=text/css href="{{ url_for('static', filename='main.css') }}"> -->
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='analysis.css') }}">
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Input Tokens</h4>
+      </div>
+      <div class="modal-body">
+        {{tokens}}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="row top-row">
+    <div class="col-xs-3">
+      <div class="brand-name">
+        <img src="/static/crystal.png" />
+        <a href="/">Github Crystal</a>
+      </div>
+    </div>
+  </div>
+  <div class="row bottom-row">
+    <div class="col-xs-12 divider"></div> <!-- why do I need a divider? wtf? -->
+    <div class="col-xs-6 left-column">
+      <div class="repo-des">
+        <div class='text-center'><h2><a href="{{repo_url}}">{{full_name}}</a></h2></div>
+        <div class='text-center repo-description'><h4>{{description}}</h4></div>
+      </div>
+      <div class="row">
+        <div class="col-xs-6 repo-stat"><i class="fa fa-tachometer"></i> {{repo_size}}<span class="size-unit">KB</span></div>
+        <div class="col-xs-6 repo-stat"><i class="fa fa-star"></i> {{stars_count}}</div>
+        <div class="col-xs-6 repo-stat"><i class="fa fa-code-fork"></i> {{forks_count}}</div>
+        <div class="col-xs-6 repo-stat"><i class="fa fa-eye"></i> {{watchers_count}}</div>
+        <div class="col-xs-6 repo-stat"></div>
+        <div class="col-xs-6 repo-stat">
+          <button type="button" class="btn btn-primary btn-lg show-tokens" data-toggle="modal" data-target="#myModal">
+            SHOW TOKENS
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-6 right-column">
+      {% for sim_repo in similar_repos %}
+        <div class="sim-repo-container">
+          <div class="repo-des">
+            <div class='text-center'><h2><a href="{{sim_repo.repo_url}}">{{sim_repo.full_name}}</a></h2></div>
+            <div class='text-center repo-description'><h4>{{sim_repo.description}}</h4></div>
+          </div>
+          <div class="row">
+            <div class="col-xs-6 repo-stat"><i class="fa fa-tachometer"></i> {{sim_repo.repo_size}}<span class="size-unit">KB</span></div>
+            <div class="col-xs-6 repo-stat"><i class="fa fa-star"></i> {{sim_repo.stars_count}}</div>
+            <div class="col-xs-6 repo-stat"><i class="fa fa-code-fork"></i> {{sim_repo.forks_count}}</div>
+            <div class="col-xs-6 repo-stat"><i class="fa fa-eye"></i> {{sim_repo.watchers_count}}</div>
+            <div class="col-xs-6 repo-stat"><i class="fa fa-files-o"></i> <strong>{{sim_repo.similarity}}</strong></div>
+            <div class="col-xs-6 repo-stat"><i class="fa fa-calendar"></i> {{ sim_repo.days_active }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='analysis.js') }}"></script>
+
+{% endblock %}

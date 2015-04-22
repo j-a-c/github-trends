@@ -1,0 +1,16 @@
+<!doctype html>
+<title>GitHub Crystal</title>
+
+<head>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='bootstrap.css') }}">
+<link rel=stylesheet type=text/css href="/static/font-awesome/font-awesome.css">
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='global.css') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+
+<script src="{{ url_for('static', filename='jquery-1.11.2.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap.js') }}"></script>  
+
+<body>
+  {% block body %}{% endblock %}
+</body>
