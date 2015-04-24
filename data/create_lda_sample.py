@@ -7,7 +7,7 @@ if __name__ == '__main__':
     INPUT_DIR = 'clean'
     OUTPUT_DIR = 'lda_sample'
     
-    PERCENT_TO_KEEP = 0.05
+    PERCENT_TO_KEEP = 0.20
 
     for root, dirs, files in os.walk(INPUT_DIR):
         for f in files:
