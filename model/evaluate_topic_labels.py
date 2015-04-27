@@ -16,7 +16,7 @@ if __name__ == '__main__':
     
     for line in open(TOPIC_LABELS_FILE):
         parts = line.strip().split(',')
-        label = parts[1].strip()
+        label = parts[1].strip().lower()
         if label in labels:
             print 'Duplicate label', label
             num_duplicate_labels += 1
