@@ -5,7 +5,7 @@ import socket
 import sys
 import time
 
-from socket_wrapper import *
+from utils.socket_wrapper import *
 from thread import *
 
  

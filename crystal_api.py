@@ -3,7 +3,7 @@ import socket
 import struct
  
 from crystal_server import GET_SIMILAR_REPOS_BY_TFIDF, GET_SIMILAR_REPOS_BY_TOPIC, PREDICT_TOPICS
-from socket_wrapper import *
+from utils.socket_wrapper import *
 
 class GithubCrystalApi(object):
 
