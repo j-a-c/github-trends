@@ -1,3 +1,4 @@
+import collections
 import os
 
 if __name__ == '__main__':
@@ -9,21 +10,26 @@ if __name__ == '__main__':
     
     EMPTY_LABEL = '___'
     
-    labels = set()
+    labels = collections.defaultdict(int)
     
     num_empty_labels = 0
     num_duplicate_labels = 0
+    num_total_topics = 0
     
     for line in open(TOPIC_LABELS_FILE):
         parts = line.strip().split(',')
         label = parts[1].strip().lower()
-        if label in labels:
-            print 'Duplicate label', label
-            num_duplicate_labels += 1
-        elif label != EMPTY_LABEL:
-            labels.add(label)
+        
+        num_total_topics += 1
+        if label != EMPTY_LABEL:
+            labels[label] += 1
         else:
             num_empty_labels += 1
-            
-    print 'Number of duplicated labels:', num_duplicate_labels
+     
+    print 'Duplicated labels:'
+    for label in labels:
+        if labels[label] > 1:
+            print '\t', label, labels[label]
+        
     print 'Number of empty labels:', num_empty_labels
+    print 'Total topics', num_total_topics
