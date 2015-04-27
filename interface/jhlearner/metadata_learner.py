@@ -1,17 +1,23 @@
-import requests
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-import pickle
 import csv
+import numpy as np
+import os
 import pdb
-from datetime import datetime
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.metrics.pairwise import linear_kernel
+import pickle
+import requests
+import sys
+
 from base64 import b64decode as decoder
+from datetime import datetime
 from gensim.utils import simple_preprocess
 from gensim.parsing.preprocessing import STOPWORDS
-import BeautifulSoup
-import sys
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import linear_kernel
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+try:
+    import BeautifulSoup
+except:
+    from bs4 import BeautifulSoup
 
 # Tokenizes a text. For a sample of the cleaning properties, try code below.
 # tokenize(u"\xefgloo10; that's my name, ice-cubes are m3h game!")
@@ -150,8 +156,8 @@ def get_repo(repo_url, username, pw):
   return obj
 
 def learn(repo_url, username, pw):
-  data = pickle.load(open("./jhlearner/meta_and_readme.p", "rb"))
-  doc_urls = pickle.load(open("./jhlearner/selected_urls.p", "rb"))
+  data = pickle.load(open(os.path.join('interface', 'jhlearner', 'meta_and_readme.p'), 'rb'))
+  doc_urls = pickle.load(open(os.path.join('interface', 'jhlearner', 'selected_urls.p'), 'rb'))
 
   documents = data.keys()
   tfidf = TfidfVectorizer()

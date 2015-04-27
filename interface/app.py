@@ -1,13 +1,13 @@
+import pdb
+import requests
+
 from flask import Flask
 from flask import render_template
 from flask import request
 from jhlearner import metadata_learner as ml
-import requests
-import pdb
 
-app = Flask(__name__)
-# app.config.from_object('app.default_settings')
-app.config.from_envvar('FLASK_SETTINGS')
+# This must be last.
+from interface import app
 
 @app.route("/")
 def main(name=None):
@@ -70,9 +70,3 @@ def analysis():
     tokens=repo.get('tokens', ''),
     similar_repos=similar_repos
   )
-
-if __name__ == "__main__":
-  app.run(debug=True)
-
-
-# auth=(app.config["GITHUB_USER"], app.config["GITHUB_PW"]))
