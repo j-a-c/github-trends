@@ -5,6 +5,7 @@ import socket
 import sys
 import time
 
+from data.sorted_directory_iterator import SortedDirectoryIterator
 from utils.socket_wrapper import *
 from thread import *
 
@@ -70,7 +71,10 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                     first = False
                 else:
                     repo_ids.intersection_update(new_ids)
+                 
             reply = list(repo_ids)
+            
+        # The API does not recognize the request.
         else:
             print 'Unknown request:', request
             
