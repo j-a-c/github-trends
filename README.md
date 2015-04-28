@@ -10,6 +10,10 @@ First start the server that manages the index:
 Then run the user interface:
 
     python crystal_interface.py
+    
+An tutorial for the API can be executed by:
+
+    python crystal_api.py
 
 ## Dependencies
 
