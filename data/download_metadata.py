@@ -120,7 +120,7 @@ def write_metadata(metadata_buffer, meta_dir, meta_file_name):
 if __name__ == '__main__':
 
     RAW_URL_DIR = os.path.join('..','urls','raw')
-    README_INDEX_LIST_FILE = 'readme_index_list.json'
+    README_INDEX_LIST_FILE = 'clean_readme_index_list.json'
     META_DIR = 'metadata'
     READMES_PER_FILE = 10000
 

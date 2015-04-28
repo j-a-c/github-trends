@@ -1,4 +1,5 @@
 import collections
+import numpy as np
 import json
 import os
 import time
@@ -86,7 +87,12 @@ class Index(object):
         index_name =  str(break_index) + self.index_ending
         return os.path.join(self.index_dir, index_name)
 
-
+    def __getitem__(self, token):
+        """
+        See get().
+        """
+        return self.get(token)
+        
     def get(self, token):
         """
         Arguments:
@@ -185,8 +191,8 @@ if __name__ == '__main__':
 
     # Directory containing index.
     index_dir = 'index'
-    # 500 MB
-    memory_cache_limit = 500e6
+    # 250 MB
+    memory_cache_limit = 250e6
 
     # Load the index.
     print 'Loading index...'
@@ -205,6 +211,43 @@ if __name__ == '__main__':
     print len(index.get('destroyaliens'))
     print 'Time to query:', time.time() - t0
 
+    # Calculate document norms.
+    
+    CLEAN_README_ROOT = os.path.join('..', 'data', 'clean')
+    
+    print 'Counting the number of documents.'
+    n_docs = 0
+    for d in os.listdir(CLEAN_README_ROOT):
+        n_docs += len(os.listdir(os.path.join(CLEAN_README_ROOT, d)))
+    
+    print 'Number of docs:', n_docs
+    
+    norms = collections.defaultdict(float)
+    
+    print 'Iterating over terms.'
+    current_term = 0
+    for term in index:
+        term_idf = np.log(n_docs / (1.0+len(index[term])))
+        
+        for doc_freq_pair in index[term]:
+            doc_id = doc_freq_pair[0]
+            doc_freq = doc_freq_pair[1]
+            
+            norms[doc_id] += (doc_freq * term_idf)**2
+            
+        current_term += 1
+        if current_term % 10000 == 0:
+            print 'Terms processed:', current_term
+    print 'Terms processed:', current_term
+           
+    print 'Calculating roots.'
+    for k in norms:
+        norms[k] = np.sqrt(norms[k])
+    
+    print 'Number of keys in norms:', len(norms)
+    
+    json.dump(norms, open('document_norms.json', 'w+'))
+    
     quit()
 
     '''

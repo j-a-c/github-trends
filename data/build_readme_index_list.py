@@ -8,7 +8,6 @@ if __name__ == '__main__':
     README_DIR = 'clean'
     OUTPUT_FILE = 'clean_readme_index_list.json'
     
-
     all_readmes = []
 
     # Looping manually is faster because we do not need to do lots of isFile()

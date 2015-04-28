@@ -1,6 +1,7 @@
 import json
 import socket
 import struct
+import time
  
 from crystal_server import GET_SIMILAR_REPOS_BY_TFIDF, GET_SIMILAR_REPOS_BY_TOPIC, PREDICT_TOPICS
 from utils.socket_wrapper import *
@@ -32,16 +33,22 @@ class GithubCrystalApi(object):
         return json.loads(recv_msg(self.s))
         
     def get_similar_repos_by_tfidf(self, readme_tokens):
-        pass
+        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_TFIDF, readme_tokens]))
+        return json.loads(recv_msg(self.s))
  
 if __name__ == '__main__':
     api = GithubCrystalApi()
     
     readme = 'Analyzing trends on Github using topic models and machine learning'
+    readme_tokens = readme.lower().split()
     
     """ How to predict topics. """
+    t0 = time.clock()
     
-    topics = api.predict_topics(readme.lower().split())
+    topics = api.predict_topics(readme_tokens)
+    
+    print 'Time for query:', time.clock() - t0
+    
     print 'Topics'
     for topic_label, percent, topic_id in topics:
         print '\t', topic_label, percent
@@ -49,18 +56,40 @@ if __name__ == '__main__':
     """ How to get similar repositories by topic. """
     
     # One topics.
-    # Note that we have to wrap a single topic since the API expects a list.
+    # Note that we have to wrap a single topic in [] since the API expects a list.
+    t0 = time.clock()
+    
     similar_topic_repos = api.get_similar_repos_by_topic([topics[0]])
+    
+    print 'Time for query:', time.clock() - t0
+    
     print 'Number of repos close to', topics[0][1], 'of', \
         topics[0][0], ':', len(similar_topic_repos)
+    
+    for s in similar_topic_repos:
+        print '\t', s
         
     # Multiple topics.
+    t0 = time.clock()
+    
     similar_topic_repos = api.get_similar_repos_by_topic(topics[:2])
+    
+    print 'Time for query:', time.clock() - t0
+    
     print 'Number of repos close to', topics[0][1], 'of', \
         topics[0][0], 'and', topics[1][1], 'of', \
         topics[1][0], ':', len(similar_topic_repos)
-    print 'IDs:', similar_topic_repos
+    
+    for s in similar_topic_repos:
+        print '\t', s
         
     """ How to get similar repositories by TFIDF. """
     
-    # TODO
+    t0 = time.clock()
+    
+    similar_docs = api.get_similar_repos_by_tfidf(readme_tokens)
+    
+    print 'Time for query:', time.clock() - t0
+    for s in similar_docs:
+        print '\t', s
+     
