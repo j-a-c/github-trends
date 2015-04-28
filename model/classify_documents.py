@@ -27,6 +27,8 @@ NO_ABOVE = 0.10
 CLASSIFICATION_PATH = 'raw_all_classes.txt'
 CLASSIFY_INPUT_DOCS = True
 
+ITERATIONS_PER_FILE = 1
+
 """
 Lazy iterator for accessing files. This allows us to access the files without
 loading them all into memory.
@@ -99,8 +101,18 @@ if CLASSIFY_INPUT_DOCS:
     classification_writer.write('Document (Topic/Percent)+\n')
     for text,path in MyCorpus(IMPORT_DIR):
         classification_text = path.split(os.path.sep)[-1] + ' '
-        for topic, percent in lda_model[dictionary.doc2bow(text)]:
-            classification_text += str(topic) + '/' + str(percent) + ' '
+        
+        votes = collections.defaultdict(int)
+        percents = collections.defaultdict(int)
+        
+        for j in range(ITERATIONS_PER_FILE):
+            for topic, percent in lda_model[dictionary.doc2bow(text)]:
+                votes[topic] += 1
+                percents[topic] += percent
+        
+        for topic in votes:
+            if votes[topic] == ITERATIONS_PER_FILE:
+                classification_text += str(topic) + '/' + str(percent / ITERATIONS_PER_FILE) + ' '
         classification_text += '\n'
         classification_writer.write(classification_text)
         

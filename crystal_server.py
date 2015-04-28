@@ -136,9 +136,9 @@ if __name__ == '__main__':
     NO_BELOW = 2
     NO_ABOVE = 0.10
     # Root directory for the topic index.
-    TOPIC_INDEX_ROOT = os.path.join('model', 'topic_index_5')
+    TOPIC_INDEX_ROOT = os.path.join('model', 'topic_index_10')
     # The percent window used to create the topic index.
-    PERCENT_WINDOW = 5
+    PERCENT_WINDOW = 10
     # Directory containing inverted index.
     INVERTED_INDEX_DIR = os.path.join('model', 'index')
     # 250 MB - The maximum cumulative file size to load into memory.

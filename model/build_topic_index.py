@@ -21,8 +21,8 @@ if __name__ == '__main__':
     #
 
     FILES_PER_DUMP = 50000
-    RAW_TOPIC_INPUT = 'raw_all_classes.txt'
-    PERCENT_WINDOW = 2
+    RAW_TOPIC_INPUT = 'raw_all_classes_1_iter.txt'
+    PERCENT_WINDOW = 10
 
     NUM_TOPICS = 500
     
