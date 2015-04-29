@@ -30,8 +30,14 @@ if __name__ == '__main__':
             reader = csv.reader(current_meta_file, delimiter=',', quotechar='"')
 
             for row in reader:
+                row = row
                 if len(row) == 1:
                     metadata_index[row[0]] = {}
+                
+                # Catch for a bug in download metadata.
+                while len(row) < 12:
+                    row.insert(-4, '_')
+                
                 else:
                     for e,i in enumerate(row):
                         if i != '_' and e != 0:

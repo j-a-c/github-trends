@@ -168,10 +168,12 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                     query_matches[doc_id] += 1
 
             for doc_id in document_scores:
-                document_scores[doc_id] *= query_matches[doc_id]
-                document_scores[doc_id] /= effective_query_tokens
+            
+                if query_matches[doc_id] != effective_query_tokens:
+                    document_scores[doc_id] *= query_matches[doc_id]
+                    document_scores[doc_id] /= effective_query_tokens
                 
-                if USE_METADATA_INDEX:
+                elif USE_METADATA_INDEX:
                     if doc_id in metadata_index:
                         doc_metadata = metadata_index[doc_id]
                         if WATCH_INDEX in doc_metadata:
@@ -180,15 +182,44 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                             document_scores[doc_id] *= np.log10(doc_metadata[STAR_INDEX])
                         if CONTRIB_INDEX in doc_metadata:
                             document_scores[doc_id] *= np.log10(doc_metadata[CONTRIB_INDEX])
-                    
-            reply = [[k, document_scores[k]] for k in document_scores]
+            
+            # Sort from greatest score to least score.
+            reply = [(doc_id, document_scores[doc_id]) for doc_id in document_scores]
             reply.sort(key=lambda tup: tup[1], reverse = True)
-            print '\tNumber of matches:', len(reply)
-            if len(reply) > max_reply_size:
-                reply = reply[:max_reply_size]
-            # Sigh, the map keys are string...
-            reply = [(id_to_link_map[t[0]], t[1]) for t in reply]
+            print '\tNumber of raw matches:', len(reply)            
+            
+            # Remove forked projects from results.
+            # Our assumption is that one repo is a fork of another if:
+            # 1. They have the same repo description (raw) and repo name (derived from url).
+            
+            doc_norm_set = set()
+            name_to_description = collections.defaultdict(set)
+            
+            clean_reply = []
+            for t in reply:
+                doc_id = t[0]
+                doc_url = id_to_link_map[doc_id]
+                # Name is last part of the url.
+                doc_name = doc_url.split('/')[-1].lower()
                 
+                add_to_clean = False
+                # 1
+                if not add_to_clean and doc_id in metadata_index:
+                    doc_metadata = metadata_index[doc_id]
+                    if DESCRIPTION_INDEX in doc_metadata:
+                        doc_description = doc_metadata[DESCRIPTION_INDEX]
+                        if doc_description not in name_to_description[doc_name]:
+                            name_to_description[doc_name].add(doc_description)
+                            add_to_clean = True
+                
+                if add_to_clean:
+                     clean_reply.append( [doc_url, document_scores[doc_id]] )
+            
+            reply = clean_reply
+            
+            print '\tNumber of de-forked matches:', len(reply)
+            if len(reply) > max_reply_size:
+                reply = reply[:max_reply_size]                
     
         # The API does not recognize the request.
         else:
