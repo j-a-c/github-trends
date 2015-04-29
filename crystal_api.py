@@ -52,7 +52,6 @@ if __name__ == '__main__':
     api = GithubCrystalApi()
     
     readme = 'clone of the operating system Unix'
-    readme = 'python'
     readme_tokens = tokenize(readme)
     
     """ How to predict topics. """
