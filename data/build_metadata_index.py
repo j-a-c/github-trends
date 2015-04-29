@@ -21,10 +21,7 @@ if __name__ == '__main__':
     
     METADATA_DIRECTORY = 'metadata'
    
-    readme_index = 0
-    
-    missing_fields = collections.defaultdict(int)
-    all_missing = 0
+    metadata_index = collections.defaultdict(lambda: {})
 
     for meta_file in sorted(os.listdir(METADATA_DIRECTORY), key = lambda p: int(p.split('.')[0])):
         meta_file_path = os.path.join(METADATA_DIRECTORY, meta_file)
@@ -34,11 +31,17 @@ if __name__ == '__main__':
 
             for row in reader:
                 if len(row) == 1:
-                    all_missing += 1
+                    metadata_index[row[0]] = {}
                 else:
                     for e,i in enumerate(row):
-                        if i == '_':
-                            missing_fields[e] += 1
-
-    for k in missing_fields:
-        print k, missing_fields[k]
+                        if i != '_' and e != 0:
+                            if e >= 1 and e <= 7:
+                                if i.endswith('+'):
+                                    i = i[:-1]
+                                i = int(i.replace(',', ''))
+                                if i > 10: # To keep the entries relatively sparse.
+                                    metadata_index[row[0]][e] = i
+                            else:
+                                metadata_index[row[0]][e] = i
+                            
+    json.dump(metadata_index, open('metadata_index.json', 'w+'))

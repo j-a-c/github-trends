@@ -1,9 +1,12 @@
+import gensim
 import json
 import socket
 import struct
 import time
  
-from crystal_server import GET_SIMILAR_REPOS_BY_TFIDF, GET_SIMILAR_REPOS_BY_TOPIC, PREDICT_TOPICS
+from crystal_server import GET_SIMILAR_REPOS_BY_LUCENE, GET_SIMILAR_REPOS_BY_TFIDF, GET_SIMILAR_REPOS_BY_TOPIC, PREDICT_TOPICS
+from gensim.utils import simple_preprocess
+from gensim.parsing.preprocessing import STOPWORDS
 from utils.socket_wrapper import *
 
 class GithubCrystalApi(object):
@@ -21,6 +24,10 @@ class GithubCrystalApi(object):
         send_msg(self.s, json.dumps([PREDICT_TOPICS,readme_tokens]))
         return json.loads(recv_msg(self.s))
       
+    def get_similar_repos_by_lucene(self, readme_tokens):
+        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_LUCENE, readme_tokens]))
+        return json.loads(recv_msg(self.s))
+      
     def get_similar_repos_by_topic(self, criteria):
         """
         Returns a list of repository IDs that have topic compositions
@@ -36,18 +43,23 @@ class GithubCrystalApi(object):
         send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_TFIDF, readme_tokens]))
         return json.loads(recv_msg(self.s))
  
+ 
+ 
+def tokenize(text):
+    return [token for token in gensim.utils.simple_preprocess(text) if token not in gensim.parsing.preprocessing.STOPWORDS]
+ 
 if __name__ == '__main__':
     api = GithubCrystalApi()
     
-    readme = 'Analyzing trends on Github using topic models and machine learning'
-    readme_tokens = readme.lower().split()
+    readme = 'clone of the operating system Unix'
+    readme_tokens = tokenize(readme)
     
     """ How to predict topics. """
     t0 = time.clock()
     
     topics = api.predict_topics(readme_tokens)
     
-    print 'Time for query:', time.clock() - t0
+    print 'Time for topic prediction query:', time.clock() - t0
     
     print 'Topics'
     for topic_label, percent, topic_id in topics:
@@ -61,7 +73,7 @@ if __name__ == '__main__':
     
     similar_topic_repos = api.get_similar_repos_by_topic([topics[0]])
     
-    print 'Time for query:', time.clock() - t0
+    print 'Time for similar topics query:', time.clock() - t0
     
     print 'Number of repos close to', topics[0][1], 'of', \
         topics[0][0], ':', len(similar_topic_repos)
@@ -70,18 +82,19 @@ if __name__ == '__main__':
         print '\t', s
         
     # Multiple topics.
-    t0 = time.clock()
-    
-    similar_topic_repos = api.get_similar_repos_by_topic(topics[:2])
-    
-    print 'Time for query:', time.clock() - t0
-    
-    print 'Number of repos close to', topics[0][1], 'of', \
-        topics[0][0], 'and', topics[1][1], 'of', \
-        topics[1][0], ':', len(similar_topic_repos)
-    
-    for s in similar_topic_repos:
-        print '\t', s
+    if len(topics) > 1:
+        t0 = time.clock()
+        
+        similar_topic_repos = api.get_similar_repos_by_topic(topics[:2])
+        
+        print 'Time for topic similarity query:', time.clock() - t0
+        
+        print 'Number of repos close to', topics[0][1], 'of', \
+            topics[0][0], 'and', topics[1][1], 'of', \
+            topics[1][0], ':', len(similar_topic_repos)
+        
+        for s in similar_topic_repos:
+            print '\t', s
         
     """ How to get similar repositories by TFIDF. """
     
@@ -89,7 +102,17 @@ if __name__ == '__main__':
     
     similar_docs = api.get_similar_repos_by_tfidf(readme_tokens)
     
-    print 'Time for query:', time.clock() - t0
+    print 'Time for TFIDF query:', time.clock() - t0
     for s in similar_docs:
         print '\t', s
      
+     
+    """ How to get similar repositories by Lucene's criteria. """
+    
+    t0 = time.clock()
+    
+    similar_docs = api.get_similar_repos_by_lucene(readme_tokens)
+    
+    print 'Time for Lucene query:', time.clock() - t0
+    for s in similar_docs:
+        print '\t', s

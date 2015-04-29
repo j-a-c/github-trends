@@ -2,6 +2,7 @@ import collections
 import gensim
 import json
 import os
+import numpy as np
 import random
 import socket
 import sys
@@ -11,15 +12,36 @@ from model.index import Index
 from utils.socket_wrapper import *
 from thread import *
 
- 
-HOST = ''
 PREDICT_TOPICS = 'PREDICT_TOPICS'
+GET_SIMILAR_REPOS_BY_LUCENE = 'GET_SIMILAR_REPOS_BY_LUCENE'
 GET_SIMILAR_REPOS_BY_TFIDF = 'GET_SIMILAR_REPOS_BY_TFIDF'
 GET_SIMILAR_REPOS_BY_TOPIC = 'GET_SIMILAR_REPOS_BY_TOPIC'
 
+# Do not alter this.
+HOST = ''
+
+# Whether to use the metadata index or not.
+USE_METADATA_INDEX = True
+
+# Metadata parameters
+README_ID_INDEX = '0'
+WATCH_INDEX = '1'
+STAR_INDEX = '2'
+FORK_INDEX = '3'
+COMMIT_INDEX = '4'
+BRANCH_INDEX = '5'
+RELEASES_INDEX = '6'
+CONTRIB_INDEX = '7'
+LATEST_AUTHOR_INDEX = '8'
+DESCRIPTION_INDEX = '9'
+LATEST_README_INDEX = '10'
+FIRST_README_INDEX = '11'
+
+
 def client_thread(conn, lda_model, dictionary, label_map, \
     topic_index_root, percent_window, inverted_index, document_norms, \
-    max_reply_size, tfidf_upper_threshold, id_to_link_map):
+    max_reply_size, tfidf_upper_threshold, id_to_link_map, num_docs, \
+    metadata_index):
     """
     Function for handling connections.
     This will be used to create threads.
@@ -39,26 +61,33 @@ def client_thread(conn, lda_model, dictionary, label_map, \
         request = data[0]
         
         if request == PREDICT_TOPICS:
+            print 'Requested: PREDICT_TOPICS'
             readme_text = data[1]
             for topic, percent in lda_model[dictionary.doc2bow(readme_text)]:
                 topic_label = label_map[topic]
                 reply.append( (topic_label, percent, topic) )
 
         elif request == GET_SIMILAR_REPOS_BY_TFIDF:
+            print 'Requested: GET_SIMILAR_REPOS_BY_TFIDF'
             readme_text = data[1]
             query_tokens = set(readme_text)
             
             document_scores = collections.defaultdict(float)
-            
+
             for token in query_tokens:
                 docs_containing_token = inverted_index[token]
-                if len(docs_containing_token) > tfidf_upper_threshold:
+                num_docs_containing_token = len(docs_containing_token)
+                
+                if num_docs_containing_token > tfidf_upper_threshold or num_docs_containing_token == 0:
                     continue
+                    
+                print '\t', token
+                
                 for doc_freq_pair in docs_containing_token:
                     doc_id = str(doc_freq_pair[0]) # -_- Sigh
                     doc_freq = doc_freq_pair[1]
                     document_scores[doc_id] += doc_freq
-                    
+              
             for doc_id in document_scores:
                 if document_norms[doc_id] != 0.0:
                     document_scores[doc_id] /= document_norms[doc_id]
@@ -67,12 +96,14 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                     
             reply = [[k, document_scores[k]] for k in document_scores]
             reply.sort(key=lambda tup: tup[1], reverse = True)
+            print '\tNumber of matches:', len(reply)
             if len(reply) > max_reply_size:
                 reply = reply[:max_reply_size]
             # Sigh, the map keys are string...
-            reply = [id_to_link_map[t[0]] for t in reply if t[0] in id_to_link_map]
+            reply = [(id_to_link_map[t[0]], t[1]) for t in reply]
             
         elif request == GET_SIMILAR_REPOS_BY_TOPIC:
+            print 'Requested: GET_SIMILAR_REPOS_BY_TOPIC'
             criteria = data[1]
             
             repo_ids = set()
@@ -101,13 +132,64 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                     repo_ids.intersection_update(new_ids)
             
             # id_to_link_map is indexed by strings -_-
-            reply = [id_to_link_map[i] for i in repo_ids if i in id_to_link_map]
+            reply = [id_to_link_map[i] for i in repo_ids]
             # Return a random subset.
             random.shuffle(reply)
+            print '\tNumber of matches:', len(reply)
             if len(reply) > max_reply_size:
                 reply = reply[:max_reply_size]
+
+        
+        elif request == GET_SIMILAR_REPOS_BY_LUCENE:
+            print 'Requested: GET_SIMILAR_REPOS_BY_LUCENE'
+            readme_text = data[1]
+            query_tokens = set(readme_text)
             
+            document_scores = collections.defaultdict(float)
+            query_matches = collections.defaultdict(int)
+            effective_query_tokens = 0
             
+            for token in query_tokens:
+                docs_containing_token = inverted_index[token]
+                num_docs_containing_token = len(docs_containing_token)
+                
+                if num_docs_containing_token > tfidf_upper_threshold or num_docs_containing_token == 0:
+                    continue
+                    
+                print '\t', token
+                
+                effective_query_tokens += 1
+                idf_2 = (1 + np.log10(num_docs / (num_docs_containing_token + 1)))**2
+                
+                for doc_freq_pair in docs_containing_token:
+                    doc_id = str(doc_freq_pair[0]) # -_- Sigh
+                    doc_freq = doc_freq_pair[1]
+                    document_scores[doc_id] += np.sqrt(doc_freq) * idf_2
+                    query_matches[doc_id] += 1
+
+            for doc_id in document_scores:
+                document_scores[doc_id] *= query_matches[doc_id]
+                document_scores[doc_id] /= effective_query_tokens
+                
+                if USE_METADATA_INDEX:
+                    if doc_id in metadata_index:
+                        doc_metadata = metadata_index[doc_id]
+                        if WATCH_INDEX in doc_metadata:
+                            document_scores[doc_id] *= np.log10(doc_metadata[WATCH_INDEX])
+                        if STAR_INDEX in doc_metadata:
+                            document_scores[doc_id] *= np.log10(doc_metadata[STAR_INDEX])
+                        if CONTRIB_INDEX in doc_metadata:
+                            document_scores[doc_id] *= np.log10(doc_metadata[CONTRIB_INDEX])
+                    
+            reply = [[k, document_scores[k]] for k in document_scores]
+            reply.sort(key=lambda tup: tup[1], reverse = True)
+            print '\tNumber of matches:', len(reply)
+            if len(reply) > max_reply_size:
+                reply = reply[:max_reply_size]
+            # Sigh, the map keys are string...
+            reply = [(id_to_link_map[t[0]], t[1]) for t in reply]
+                
+    
         # The API does not recognize the request.
         else:
             print 'Unknown request:', request
@@ -149,11 +231,15 @@ if __name__ == '__main__':
     DOCUMENT_NORM_PATH = os.path.join('model', 'document_norms.json')
     # Id to link map
     ID_TO_LINK_MAP_PATH = os.path.join('data', 'id_to_link_map.json')
+    # Path to the metadata index.
+    METADATA_INDEX_PATH = os.path.join('data', 'metadata_index.json')
     
     # The maximum number of documents to return in a single reply.
     MAX_REPLY_SIZE = 25
     # Ignore terms with more than this amount of documents containing them.
     TFIDF_UPPER_THRESHOLD_SIZE = 500000 # Number of docs: 2118605
+    
+    NUM_DOCS = 2118605
  
     ###
     # Build TFIDF model.
@@ -235,6 +321,16 @@ if __name__ == '__main__':
         print '\tTime to filter:', time.clock() - filter_start_time
       
     ###
+    # Load the metadata index.
+    ###
+    
+    print '====='
+    print 'Loading metadata index...'
+    metadata_index = {}
+    if USE_METADATA_INDEX:
+        metadata_index = json.load(open(METADATA_INDEX_PATH))
+      
+    ###
     # Bind and listen for incoming requests.
     ###
  
@@ -253,7 +349,7 @@ if __name__ == '__main__':
     # Start listening on socket.
     s.listen(10)
     print 'Socket now listening.'
-     
+
      
     # List forever.
     while 1:
@@ -266,6 +362,6 @@ if __name__ == '__main__':
             (conn, lda_model, dictionary, \
             label_map, TOPIC_INDEX_ROOT, PERCENT_WINDOW, \
             inverted_index, document_norms, MAX_REPLY_SIZE, \
-            TFIDF_UPPER_THRESHOLD_SIZE, id_to_link_map))
+            TFIDF_UPPER_THRESHOLD_SIZE, id_to_link_map, NUM_DOCS, metadata_index))
      
     s.close()
