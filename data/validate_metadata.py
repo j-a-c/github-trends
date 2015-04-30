@@ -24,21 +24,22 @@ if __name__ == '__main__':
     readme_index = 0
     
     missing_fields = collections.defaultdict(int)
-    all_missing = 0
+    
+    fields = [str(i) for i in range(12)]
 
-    for meta_file in sorted(os.listdir(METADATA_DIRECTORY), key = lambda p: int(p.split('.')[0])):
-        meta_file_path = os.path.join(METADATA_DIRECTORY, meta_file)
-        print meta_file_path
-        with open(meta_file_path, 'r') as current_meta_file:
-            reader = csv.reader(current_meta_file, delimiter=',', quotechar='"')
+    print 'Loading metadata...'
+    metadata_index = json.load(open('metadata_index.json'))
+    print 'Metadata loaded.'
 
-            for row in reader:
-                if len(row) == 1:
-                    all_missing += 1
-                else:
-                    for e,i in enumerate(row):
-                        if i == '_':
-                            missing_fields[e] += 1
+    counter = 0
+    for entry in metadata_index:
+        counter += 1
+        for field in fields:
+            if field not in entry:
+                missing_fields[field] += 1
+                
+        if counter % 10000 == 0:
+            print counter
 
     for k in missing_fields:
         print k, missing_fields[k]
