@@ -37,6 +37,9 @@ DESCRIPTION_INDEX = '9'
 LATEST_README_INDEX = '10'
 FIRST_README_INDEX = '11'
 
+# In case we did not finish labelling the topics.
+JUNK_TOPIC = 'JUNK_TOPIC'
+EMPTY_TOPIC = '___'
 
 def client_thread(conn, lda_model, dictionary, label_map, \
     topic_index_root, percent_window, inverted_index, document_norms, \
@@ -63,9 +66,16 @@ def client_thread(conn, lda_model, dictionary, label_map, \
         if request == PREDICT_TOPICS:
             print 'Requested: PREDICT_TOPICS'
             readme_text = data[1]
+            percent_sum = 0.0
+            unnormalized_reply = []
             for topic, percent in lda_model[dictionary.doc2bow(readme_text)]:
                 topic_label = label_map[topic]
-                reply.append( (topic_label, percent, topic) )
+                if topic_label != JUNK_TOPIC and topic_label != EMPTY_TOPIC:
+                    percent_sum += percent
+                    unnormalized_reply.append( (topic_label, percent, topic) )
+            # Normalize topics so they sum to 1
+            for entry in unnormalized_reply:
+                reply.append( (entry[0], entry[1]/percent_sum, entry[2]) )
 
         elif request == GET_SIMILAR_REPOS_BY_TFIDF:
             print 'Requested: GET_SIMILAR_REPOS_BY_TFIDF'
