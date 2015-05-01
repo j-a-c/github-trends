@@ -8,6 +8,8 @@ import socket
 import sys
 import time
 
+from gensim.utils import simple_preprocess
+from gensim.parsing.preprocessing import STOPWORDS
 from model.index import Index
 from utils.socket_wrapper import *
 from thread import *
@@ -41,6 +43,9 @@ FIRST_README_INDEX = '11'
 JUNK_TOPIC = 'JUNK_TOPIC'
 EMPTY_TOPIC = '___'
 
+def tokenize(text):
+    return [token for token in gensim.utils.simple_preprocess(text) if token not in gensim.parsing.preprocessing.STOPWORDS]
+
 def client_thread(conn, lda_model, dictionary, label_map, \
     topic_index_root, percent_window, inverted_index, document_norms, \
     max_reply_size, tfidf_upper_threshold, id_to_link_map, num_docs, \
@@ -65,7 +70,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
         
         if request == PREDICT_TOPICS:
             print 'Requested: PREDICT_TOPICS'
-            readme_text = data[1]
+            readme_text = tokenize(data[1])     # Tokenize data the same way it was tokenized for the index.
             percent_sum = 0.0
             unnormalized_reply = []
             for topic, percent in lda_model[dictionary.doc2bow(readme_text)]:
@@ -79,7 +84,8 @@ def client_thread(conn, lda_model, dictionary, label_map, \
 
         elif request == GET_SIMILAR_REPOS_BY_TFIDF:
             print 'Requested: GET_SIMILAR_REPOS_BY_TFIDF'
-            readme_text = data[1]
+            readme_text = tokenize(data[1])     # Tokenize data the same way it was tokenized for the index.
+            readme_text.extend(data[1].split()) # Simple whitespace tokenization for user/project search.
             query_tokens = set(readme_text)
             
             document_scores = collections.defaultdict(float)
@@ -152,8 +158,8 @@ def client_thread(conn, lda_model, dictionary, label_map, \
         
         elif request == GET_SIMILAR_REPOS_BY_LUCENE:
             print 'Requested: GET_SIMILAR_REPOS_BY_LUCENE'
-            readme_text = data[1]
-            query_tokens = set(readme_text)
+            readme_text = tokenize(data[1])     # Tokenize data the same way it was tokenized for the index.
+            readme_text.extend(data[1].split()) # Simple whitespace tokenization for user/project search.
             
             document_scores = collections.defaultdict(float)
             query_matches = collections.defaultdict(int)

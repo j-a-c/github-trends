@@ -1,12 +1,9 @@
-import gensim
 import json
 import socket
 import struct
 import time
  
 from crystal_server import GET_SIMILAR_REPOS_BY_LUCENE, GET_SIMILAR_REPOS_BY_TFIDF, GET_SIMILAR_REPOS_BY_TOPIC, PREDICT_TOPICS
-from gensim.utils import simple_preprocess
-from gensim.parsing.preprocessing import STOPWORDS
 from utils.socket_wrapper import *
 
 class GithubCrystalApi(object):
@@ -16,16 +13,16 @@ class GithubCrystalApi(object):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((HOST, PORT))
 
-    def predict_topics(self, readme_tokens):
+    def predict_topics(self, readme):
         """
-        Returns a list of (topic name, percentage tuples) for the readme_tokens.
+        Returns a list of (topic name, percentage tuples) for the readme.
         """
         
-        send_msg(self.s, json.dumps([PREDICT_TOPICS,readme_tokens]))
+        send_msg(self.s, json.dumps([PREDICT_TOPICS,readme]))
         return json.loads(recv_msg(self.s))
       
-    def get_similar_repos_by_lucene(self, readme_tokens):
-        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_LUCENE, readme_tokens]))
+    def get_similar_repos_by_lucene(self, readme):
+        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_LUCENE, readme]))
         return json.loads(recv_msg(self.s))
       
     def get_similar_repos_by_topic(self, criteria):
@@ -39,25 +36,20 @@ class GithubCrystalApi(object):
         send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_TOPIC, criteria]))
         return json.loads(recv_msg(self.s))
         
-    def get_similar_repos_by_tfidf(self, readme_tokens):
-        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_TFIDF, readme_tokens]))
+    def get_similar_repos_by_tfidf(self, readme):
+        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_TFIDF, readme]))
         return json.loads(recv_msg(self.s))
  
- 
- 
-def tokenize(text):
-    return [token for token in gensim.utils.simple_preprocess(text) if token not in gensim.parsing.preprocessing.STOPWORDS]
  
 if __name__ == '__main__':
     api = GithubCrystalApi()
     
     readme = 'clone of the operating system Unix'
-    readme_tokens = tokenize(readme)
     
     """ How to predict topics. """
     t0 = time.clock()
     
-    topics = api.predict_topics(readme_tokens)
+    topics = api.predict_topics(readme)
     
     print 'Time for topic prediction query:', time.clock() - t0
     
@@ -100,7 +92,7 @@ if __name__ == '__main__':
     
     t0 = time.clock()
     
-    similar_docs = api.get_similar_repos_by_tfidf(readme_tokens)
+    similar_docs = api.get_similar_repos_by_tfidf(readme)
     
     print 'Time for TFIDF query:', time.clock() - t0
     for s in similar_docs:
@@ -111,7 +103,7 @@ if __name__ == '__main__':
     
     t0 = time.clock()
     
-    similar_docs = api.get_similar_repos_by_lucene(readme_tokens)
+    similar_docs = api.get_similar_repos_by_lucene(readme)
     
     print 'Time for Lucene query:', time.clock() - t0
     for s in similar_docs:
