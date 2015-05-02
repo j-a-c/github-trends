@@ -47,7 +47,7 @@ def tokenize(text):
     return [token for token in gensim.utils.simple_preprocess(text) if token not in gensim.parsing.preprocessing.STOPWORDS]
 
 def client_thread(conn, lda_model, dictionary, label_map, \
-    topic_index_root, percent_window, inverted_index, document_norms, \
+    topic_index_root, percent_window, inverted_index, \
     max_reply_size, tfidf_upper_threshold, id_to_link_map, num_docs, \
     metadata_index):
     """
@@ -273,8 +273,6 @@ if __name__ == '__main__':
     # The actual memory consumption will be larger than this number
     # by about an order of magnitude.
     MEMORY_CACHE_LIMIT = 250e6
-    # Path to the document norms.
-    DOCUMENT_NORM_PATH = os.path.join('model', 'document_norms.json')
     # Id to link map
     ID_TO_LINK_MAP_PATH = os.path.join('data', 'id_to_link_map.json')
     # Path to the metadata index.
@@ -299,12 +297,6 @@ if __name__ == '__main__':
     inverted_index = Index(INVERTED_INDEX_DIR, MEMORY_CACHE_LIMIT)
     
     print 'Time to load index:', time.time() - t0
-    
-    # Load the document norms.
-    print '====='
-    print 'Loading document norms.'
-    
-    document_norms = json.load(open(DOCUMENT_NORM_PATH))
     
     ###
     # Load the topic-label map.
@@ -407,7 +399,7 @@ if __name__ == '__main__':
         start_new_thread(client_thread , \
             (conn, lda_model, dictionary, \
             label_map, TOPIC_INDEX_ROOT, PERCENT_WINDOW, \
-            inverted_index, document_norms, MAX_REPLY_SIZE, \
+            inverted_index, MAX_REPLY_SIZE, \
             TFIDF_UPPER_THRESHOLD_SIZE, id_to_link_map, NUM_DOCS, metadata_index))
      
     s.close()
