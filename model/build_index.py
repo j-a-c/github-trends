@@ -86,7 +86,7 @@ if __name__ == '__main__':
             
             num_readmes_processed += 1
             if num_readmes_processed % FILES_PER_DUMP == 0:
-		print 'Dumping to disk...'
+                print 'Dumping to disk...'
                 dump_to_disk(temp_index, index)
                 temp_index = None
                 temp_index = collections.defaultdict(list)

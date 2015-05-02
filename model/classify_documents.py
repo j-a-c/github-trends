@@ -102,17 +102,9 @@ if CLASSIFY_INPUT_DOCS:
     for text,path in MyCorpus(IMPORT_DIR):
         classification_text = path.split(os.path.sep)[-1] + ' '
         
-        votes = collections.defaultdict(int)
-        percents = collections.defaultdict(int)
-        
-        for j in range(ITERATIONS_PER_FILE):
-            for topic, percent in lda_model[dictionary.doc2bow(text)]:
-                votes[topic] += 1
-                percents[topic] += percent
-        
-        for topic in votes:
-            if votes[topic] == ITERATIONS_PER_FILE:
-                classification_text += str(topic) + '/' + str(percent / ITERATIONS_PER_FILE) + ' '
+        for topic, percent in lda_model[dictionary.doc2bow(text)]:
+            classification_text += str(topic) + '/' + str(percent) + ' '
+
         classification_text += '\n'
         classification_writer.write(classification_text)
         
