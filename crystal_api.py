@@ -89,7 +89,7 @@ if __name__ == '__main__':
             print '\t', s
         
     """ How to get similar repositories by TFIDF. """
-    
+    """
     t0 = time.clock()
     
     similar_docs = api.get_similar_repos_by_tfidf(readme)
@@ -97,6 +97,7 @@ if __name__ == '__main__':
     print 'Time for TFIDF query:', time.clock() - t0
     for s in similar_docs:
         print '\t', s
+    """
      
      
     """ How to get similar repositories by Lucene's criteria. """

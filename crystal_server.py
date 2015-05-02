@@ -77,6 +77,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                 if topic_label != JUNK_TOPIC and topic_label != EMPTY_TOPIC:
                     reply.append( (topic_label, percent, topic) )
 
+        """
         elif request == GET_SIMILAR_REPOS_BY_TFIDF:
             print 'Requested: GET_SIMILAR_REPOS_BY_TFIDF'
             readme_text = tokenize(data[1])     # Tokenize data the same way it was tokenized for the index.
@@ -112,6 +113,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                 reply = reply[:max_reply_size]
             # Sigh, the map keys are string...
             reply = [(id_to_link_map[t[0]], t[1]) for t in reply]
+        """
             
         elif request == GET_SIMILAR_REPOS_BY_TOPIC:
             print 'Requested: GET_SIMILAR_REPOS_BY_TOPIC'
