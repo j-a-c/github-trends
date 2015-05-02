@@ -77,7 +77,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                 if topic_label != JUNK_TOPIC and topic_label != EMPTY_TOPIC:
                     reply.append( (topic_label, percent, topic) )
 
-        """
+            """
         elif request == GET_SIMILAR_REPOS_BY_TFIDF:
             print 'Requested: GET_SIMILAR_REPOS_BY_TFIDF'
             readme_text = tokenize(data[1])     # Tokenize data the same way it was tokenized for the index.
@@ -113,7 +113,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                 reply = reply[:max_reply_size]
             # Sigh, the map keys are string...
             reply = [(id_to_link_map[t[0]], t[1]) for t in reply]
-        """
+            """
             
         elif request == GET_SIMILAR_REPOS_BY_TOPIC:
             print 'Requested: GET_SIMILAR_REPOS_BY_TOPIC'
@@ -157,12 +157,14 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             print 'Requested: GET_SIMILAR_REPOS_BY_LUCENE'
             readme_text = tokenize(data[1])     # Tokenize data the same way it was tokenized for the index.
             readme_text.extend(data[1].split()) # Simple whitespace tokenization for user/project search.
+            query_tokens = set(readme_text)
             
             document_scores = collections.defaultdict(float)
             query_matches = collections.defaultdict(int)
             effective_query_tokens = 0
             
-            for token in query_tokens:
+            # We will sort by the inverted index has
+            for token in sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
                 docs_containing_token = inverted_index[token]
                 num_docs_containing_token = len(docs_containing_token)
                 
