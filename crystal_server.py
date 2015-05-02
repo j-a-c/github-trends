@@ -71,16 +71,11 @@ def client_thread(conn, lda_model, dictionary, label_map, \
         if request == PREDICT_TOPICS:
             print 'Requested: PREDICT_TOPICS'
             readme_text = tokenize(data[1])     # Tokenize data the same way it was tokenized for the index.
-            percent_sum = 0.0
-            unnormalized_reply = []
+
             for topic, percent in lda_model[dictionary.doc2bow(readme_text)]:
                 topic_label = label_map[topic]
                 if topic_label != JUNK_TOPIC and topic_label != EMPTY_TOPIC:
-                    percent_sum += percent
-                    unnormalized_reply.append( (topic_label, percent, topic) )
-            # Normalize topics so they sum to 1
-            for entry in unnormalized_reply:
-                reply.append( (entry[0], entry[1]/percent_sum, entry[2]) )
+                    reply.append( (topic_label, percent, topic) )
 
         elif request == GET_SIMILAR_REPOS_BY_TFIDF:
             print 'Requested: GET_SIMILAR_REPOS_BY_TFIDF'
