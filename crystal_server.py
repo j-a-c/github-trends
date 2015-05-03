@@ -46,7 +46,7 @@ JUNK_TOPIC = 'JUNK_TOPIC'
 EMPTY_TOPIC = '___'
 
 # Weighting parameters
-LUCENE_URL_MATCH_BONUS = 5
+LUCENE_URL_MATCH_BONUS = 10
 
 def tokenize(text):
     return [token for token in gensim.utils.simple_preprocess(text) if token not in gensim.parsing.preprocessing.STOPWORDS]
