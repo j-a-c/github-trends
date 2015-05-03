@@ -10,14 +10,17 @@
         <h1 class="text-center proj-title">GitHub Crystal</h1>
         <span class="subtitle">Is your project a good one?</span>
         <div class="form-group search-input-container">
-          <input class="form-control search" placeholder="https://github.com/j-a-c/github-trends">
+          <input class="form-control search autocomplete" placeholder="Enter repo URL OR Topics">
           <button class="btn btn-primary btn-submit">Find out</button>
+          <div class="floating-tags"></div>
         </div>
+        <!-- <input type="text" name="country" id="autocomplete"/> -->
       </div>
     </div>
   </div>
 </div>
 
 <script src="{{ url_for('static', filename='main.js') }}"></script>
+<script src="{{ url_for('static', filename='jquery.autocomplete.js') }}"></script>
 
 {% endblock %}
