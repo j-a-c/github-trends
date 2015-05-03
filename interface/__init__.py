@@ -1,10 +1,15 @@
 from flask import Flask
+import os
+import pdb
 
 app = Flask(__name__)
 
+# app.config.from_envvar('FLASK_SETTINGS')
+
 try:
-    # app.config.from_object('app.default_settings')
+    os.environ["FLASK_SETTINGS"] = "./settings.cfg"
     app.config.from_envvar('FLASK_SETTINGS')
+    #pdb.set_trace()
 except:
     with open('github.creds') as f:
         credentials = f.read().strip().split(',')

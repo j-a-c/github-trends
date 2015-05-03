@@ -16,7 +16,7 @@ input.search {
 }
 
 input.search:focus {
-  border: 1px solid red;
+  border: 0px solid red;
 }
 
 .title-and-search {
@@ -58,11 +58,40 @@ button.btn-submit:hover {
 
 button.btn-submit:active {
   background-color: #EB974E;
-  border: 1px solid #F2784B;
+  border: 0px solid #F2784B;
 }
 
 button.btn-submit:focus {
   outline: 0 !important;
   background-color: #EB974E;
-  border: 1px solid #F2784B;
+  border: 0px solid #F2784B;
+}
+
+.autocomplete-suggestions {
+  z-index: 10;
+}
+
+.autocomplete-suggestion {
+  padding: 10px;
+  background-color: white;
+  font-family: Biko;
+}
+
+.floating-tags {
+  width: 100%;
+  height: 100px;
+  margin-top: 20px;
+}
+
+.tag-el {
+  font-family: Moon;
+  background-color: #EB974E;
+  padding: 10px;
+  margin: 5px;
+  color: white;
+}
+
+.autocomplete-highlight {
+  background-color: #EB974E;
+  color: white;
 }
