@@ -48,6 +48,9 @@ EMPTY_TOPIC = '___'
 # Weighting parameters
 LUCENE_URL_MATCH_BONUS = 10
 
+# Max query time in seconds.
+MAX_QUERY_TIME = 5
+
 def tokenize(text):
     return [token for token in gensim.utils.simple_preprocess(text) if token not in gensim.parsing.preprocessing.STOPWORDS]
 
@@ -205,7 +208,12 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             
             # Search inverted index.
             # We will sort by the inverted index hash.
+            search_start_time = time.time()
             for token in sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
+                
+                if time.time() - search_start_time > MAX_QUERY_TIME:
+                    break
+        
                 docs_containing_token = inverted_index[token]
                 num_docs_containing_token = len(docs_containing_token)
                 
@@ -218,6 +226,8 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                             doc_id = str(repo_id)
                             document_scores[doc_id] += LUCENE_URL_MATCH_BONUS
                             query_matches[doc_id] += 1
+                    else:
+                        print '\t\tBad token:', token
                     continue
                     
                 print '\t', token

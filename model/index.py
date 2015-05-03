@@ -132,9 +132,11 @@ class Index(object):
         The index code is fixed, but we will need to rebuild the index before
         removing this code.
         """
-        new_entry = entry[0]
-        new_entry.extend(entry[1:])
-        return new_entry
+        if len(entry) > 0:
+            new_entry = entry[0]
+            new_entry.extend(entry[1:])
+            return new_entry
+        return []
 
     def __iter__(self):
         """
