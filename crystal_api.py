@@ -3,7 +3,7 @@ import socket
 import struct
 import time
  
-from crystal_server import GET_SIMILAR_REPOS_BY_LUCENE, GET_SIMILAR_REPOS_BY_TFIDF, GET_SIMILAR_REPOS_BY_TOPIC, PREDICT_TOPICS
+from crystal_server import GET_SIMILAR_REPOS_BY_LUCENE, GET_SIMILAR_REPOS_BY_TOPIC, PREDICT_TOPICS, OPTIONS_SHOW_NON_REPOS
 from utils.socket_wrapper import *
 
 class GithubCrystalApi(object):
@@ -21,11 +21,14 @@ class GithubCrystalApi(object):
         send_msg(self.s, json.dumps([PREDICT_TOPICS,readme]))
         return json.loads(recv_msg(self.s))
       
-    def get_similar_repos_by_lucene(self, readme):
-        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_LUCENE, readme]))
+    def get_similar_repos_by_lucene(self, readme, show_non_repos=True):
+        options = {}
+        options[OPTIONS_SHOW_NON_REPOS] = show_non_repos
+    
+        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_LUCENE, readme, options]))
         return json.loads(recv_msg(self.s))
       
-    def get_similar_repos_by_topic(self, criteria):
+    def get_similar_repos_by_topic(self, criteria, show_non_repos=True):
         """
         Returns a list of repository IDs that have topic compositions
         within +/- the topic index's percentage. The percentage depends on the
@@ -33,11 +36,10 @@ class GithubCrystalApi(object):
         
         Criteria must be in form [(topid_id, percent)+].
         """
-        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_TOPIC, criteria]))
-        return json.loads(recv_msg(self.s))
+        options = {}
+        options[OPTIONS_SHOW_NON_REPOS] = show_non_repos
         
-    def get_similar_repos_by_tfidf(self, readme):
-        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_TFIDF, readme]))
+        send_msg(self.s, json.dumps([GET_SIMILAR_REPOS_BY_TOPIC, criteria, options]))
         return json.loads(recv_msg(self.s))
  
  
@@ -89,7 +91,7 @@ if __name__ == '__main__':
             print '\t', s
         
     """ How to get similar repositories by TFIDF. """
-    
+    """
     t0 = time.clock()
     
     similar_docs = api.get_similar_repos_by_tfidf(readme)
@@ -97,6 +99,7 @@ if __name__ == '__main__':
     print 'Time for TFIDF query:', time.clock() - t0
     for s in similar_docs:
         print '\t', s
+    """
      
      
     """ How to get similar repositories by Lucene's criteria. """

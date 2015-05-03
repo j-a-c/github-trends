@@ -1,0 +1,73 @@
+# Test to make sure we are excluding urls we already have.
+https://github.com/torvalds/linux
+
+# Awesome Python
+#
+https://github.com/ipython/ipython
+https://github.com/scikit-learn/scikit-learn
+https://github.com/nltk/nltk
+https://github.com/numpy/numpy
+https://github.com/mwaskom/seaborn
+# Monitor File system events
+https://github.com/gorakhargosh/watchdog
+# Python Markdown Implementation
+https://github.com/waylan/Python-Markdown
+# PDF Parser
+https://github.com/euske/pdfminer
+# Dates and Times
+https://github.com/crsmithdev/arrow
+
+# Awesome Go
+#
+# Building command line apps
+https://github.com/codegangsta/cli
+# Bolt - key/value db
+https://github.com/boltdb/bolt
+# Memached client
+https://github.com/bradfitz/gomemcache/
+# couchbase client
+https://github.com/couchbase/go-couchbase
+# Send emails
+https://github.com/go-gomail/gomail/
+# ML
+https://github.com/sjwhitworth/golearn
+
+# Awesome JavaScript
+#
+# Headless WebKit
+https://github.com/ariya/phantomjs
+# MVC Frameworks and Libraries
+https://github.com/angular/angular.js
+https://github.com/meteor/meteor
+
+
+# Machine Learning
+#
+# Gradient boosting
+https://github.com/dmlc/xgboost
+# Multi-armed bandit simulation (C++)
+https://github.com/jkomiyama/banditlib
+# Deep learning framework (C++)
+https://github.com/dmlc/cxxnet
+# Deep learning for Java (Java)
+https://github.com/deeplearning4j/deeplearning4j
+# Mahout (Java)
+https://github.com/apache/mahout
+# Object oriented model of the human brain (Java)
+https://github.com/WalnutiQ/WalnutiQ
+# Spark - cluster computing framework (Java)
+https://github.com/apache/spark
+# Impala - real-time query for Hadoop (Java)
+https://github.com/cloudera/impala
+# Gensim - Topic modeling (Python)
+https://github.com/piskvorky/gensim
+# Deep learning (Python)
+https://github.com/andersbll/deeppy
+
+
+# Computer Vision
+#
+# CV Library (Python)
+https://github.com/jesolem/PCV
+# CV Library (C)
+https://github.com/liuliu/ccv
