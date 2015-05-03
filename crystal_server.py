@@ -45,13 +45,16 @@ FIRST_README_INDEX = '11'
 JUNK_TOPIC = 'JUNK_TOPIC'
 EMPTY_TOPIC = '___'
 
+# Weighting parameters
+LUCENE_URL_MATCH_BONUS = 5
+
 def tokenize(text):
     return [token for token in gensim.utils.simple_preprocess(text) if token not in gensim.parsing.preprocessing.STOPWORDS]
 
 def client_thread(conn, lda_model, dictionary, label_map, \
     topic_index_root, percent_window, inverted_index, \
     max_reply_size, tfidf_upper_threshold, id_to_link_map, num_docs, \
-    metadata_index, flagged_as_non_repo):
+    metadata_index, flagged_as_non_repo, url_token_index):
     """
     Function for handling connections.
     This will be used to create threads.
@@ -198,19 +201,29 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             
             document_scores = collections.defaultdict(float)
             query_matches = collections.defaultdict(int)
-            effective_query_tokens = 0
+            effective_query_tokens = set()
             
-            # We will sort by the inverted index hash
+            # Search inverted index.
+            # We will sort by the inverted index hash.
             for token in sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
                 docs_containing_token = inverted_index[token]
                 num_docs_containing_token = len(docs_containing_token)
                 
+                # Too many, or not enough documents contain this token.
                 if num_docs_containing_token > tfidf_upper_threshold or num_docs_containing_token == 0:
+                    # Search url_token_index.
+                    if token in url_token_index:
+                        effective_query_tokens.add(token)
+                        for repo_id in url_token_index[token]:
+                            doc_id = str(repo_id)
+                            document_scores[doc_id] += LUCENE_URL_MATCH_BONUS
+                            query_matches[doc_id] += 1
                     continue
                     
                 print '\t', token
                 
-                effective_query_tokens += 1
+                effective_query_tokens.add(token)
+                
                 idf_2 = (1 + np.log10(num_docs / (num_docs_containing_token + 1)))**2
                 
                 for doc_freq_pair in docs_containing_token:
@@ -223,12 +236,21 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                     doc_freq = doc_freq_pair[1]
                     document_scores[doc_id] += np.sqrt(doc_freq) * idf_2
                     query_matches[doc_id] += 1
+                    
+                # Search url_token_index.
+                if token in url_token_index:
+                    for repo_id in url_token_index[token]:
+                        doc_id = str(repo_id)
+                        # -_- Sigh
+                        document_scores[doc_id] += LUCENE_URL_MATCH_BONUS
+                    
+            num_effective_query_tokens = len(effective_query_tokens)
 
             for doc_id in document_scores:
             
-                if query_matches[doc_id] != effective_query_tokens:
+                if query_matches[doc_id] != num_effective_query_tokens:
                     document_scores[doc_id] *= query_matches[doc_id]
-                    document_scores[doc_id] /= effective_query_tokens
+                    document_scores[doc_id] /= num_effective_query_tokens
                 
                 elif USE_METADATA_INDEX:
                     if doc_id in metadata_index:
@@ -324,6 +346,8 @@ if __name__ == '__main__':
     METADATA_INDEX_PATH = os.path.join('data', 'metadata_index.json')
     # Path to the repos flagged as non-repos.
     FLAGGED_NON_REPOS_PATH = os.path.join('data', 'flagged_as_non_repo.json')
+    # Url token index path.
+    URL_TOKEN_INDEX_PATH = os.path.join('data', 'url_token_index.json')
     
     # The maximum number of documents to return in a single reply.
     MAX_REPLY_SIZE = 25
@@ -422,6 +446,14 @@ if __name__ == '__main__':
     print '====='
     print 'Loading repos flagged as non-repos...'
     flagged_as_non_repo = set(json.load(open(FLAGGED_NON_REPOS_PATH)))
+    
+    ###
+    # Load url_token_index
+    ###
+    
+    print '====='
+    print 'Loading url token index.'
+    url_token_index = json.load(open(URL_TOKEN_INDEX_PATH))
       
     ###
     # Bind and listen for incoming requests.
@@ -455,6 +487,7 @@ if __name__ == '__main__':
             (conn, lda_model, dictionary, \
             label_map, TOPIC_INDEX_ROOT, PERCENT_WINDOW, \
             inverted_index, MAX_REPLY_SIZE, \
-            TFIDF_UPPER_THRESHOLD_SIZE, id_to_link_map, NUM_DOCS, metadata_index, flagged_as_non_repo))
+            TFIDF_UPPER_THRESHOLD_SIZE, id_to_link_map, NUM_DOCS,\
+            metadata_index, flagged_as_non_repo, url_token_index))
      
     s.close()
