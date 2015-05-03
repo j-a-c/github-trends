@@ -14,10 +14,12 @@ from model.index import Index
 from utils.socket_wrapper import *
 from thread import *
 
+# Available requests
 PREDICT_TOPICS = 'PREDICT_TOPICS'
 GET_SIMILAR_REPOS_BY_LUCENE = 'GET_SIMILAR_REPOS_BY_LUCENE'
-GET_SIMILAR_REPOS_BY_TFIDF = 'GET_SIMILAR_REPOS_BY_TFIDF'
 GET_SIMILAR_REPOS_BY_TOPIC = 'GET_SIMILAR_REPOS_BY_TOPIC'
+# Options
+OPTIONS_SHOW_NON_REPOS = 'show_non_repos'
 
 # Do not alter this.
 HOST = ''
@@ -49,7 +51,7 @@ def tokenize(text):
 def client_thread(conn, lda_model, dictionary, label_map, \
     topic_index_root, percent_window, inverted_index, \
     max_reply_size, tfidf_upper_threshold, id_to_link_map, num_docs, \
-    metadata_index):
+    metadata_index, flagged_as_non_repo):
     """
     Function for handling connections.
     This will be used to create threads.
@@ -118,6 +120,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
         elif request == GET_SIMILAR_REPOS_BY_TOPIC:
             print 'Requested: GET_SIMILAR_REPOS_BY_TOPIC'
             criteria = data[1]
+            options = data[2]
             
             repo_ids = set()
             first = True
@@ -137,17 +140,49 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                     
                 new_ids = set()
                 for line in open(topic_percent_path):
-                    new_ids.add(line.strip())
+                    doc_id = line.strip()
+                    if not options[OPTIONS_SHOW_NON_REPOS] and doc_id in flagged_as_non_repo:
+                        continue
+                    new_ids.add(doc_id)
+                    
                 if first:
                     repo_ids = new_ids
                     first = False
                 else:
                     repo_ids.intersection_update(new_ids)
             
-            # id_to_link_map is indexed by strings -_-
-            reply = [id_to_link_map[i] for i in repo_ids]
-            # Return a random subset.
-            random.shuffle(reply)
+            # Remove forked projects from results.
+            # Our assumption is that one repo is a fork of another if:
+            # 1. They have the same repo description (raw) and repo name (derived from url).
+            
+            name_to_description = collections.defaultdict(set)
+            
+            repo_ids = list(repo_ids)
+            random.shuffle(repo_ids)
+            
+            for r in repo_ids:
+                doc_id = r
+                doc_url = id_to_link_map[doc_id]
+                # Name is last part of the url.
+                doc_name = doc_url.split('/')[-1].lower()
+                
+                add_to_clean = False
+                # 1
+                if not add_to_clean and doc_id in metadata_index:
+                    doc_metadata = metadata_index[doc_id]
+                    if DESCRIPTION_INDEX in doc_metadata:
+                        doc_description = doc_metadata[DESCRIPTION_INDEX]
+                        # Simple description normalization.
+                        if len(doc_description) > 0 and doc_description[-1] == '.':
+                            doc_description = doc_description[:-1]
+                        #
+                        if doc_description not in name_to_description[doc_name]:
+                            name_to_description[doc_name].add(doc_description)
+                            add_to_clean = True
+                
+                if add_to_clean:
+                    reply.append(id_to_link_map[doc_id])
+
             print '\tNumber of matches:', len(reply)
             if len(reply) > max_reply_size:
                 reply = reply[:max_reply_size]
@@ -159,11 +194,13 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             readme_text.extend(data[1].split()) # Simple whitespace tokenization for user/project search.
             query_tokens = set(readme_text)
             
+            options = data[2]
+            
             document_scores = collections.defaultdict(float)
             query_matches = collections.defaultdict(int)
             effective_query_tokens = 0
             
-            # We will sort by the inverted index has
+            # We will sort by the inverted index hash
             for token in sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
                 docs_containing_token = inverted_index[token]
                 num_docs_containing_token = len(docs_containing_token)
@@ -178,6 +215,11 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                 
                 for doc_freq_pair in docs_containing_token:
                     doc_id = str(doc_freq_pair[0]) # -_- Sigh
+                    
+                    # If necessary, do not include repositories flagged as non-repositories
+                    if not options[OPTIONS_SHOW_NON_REPOS] and doc_id in flagged_as_non_repo:
+                        continue
+                    
                     doc_freq = doc_freq_pair[1]
                     document_scores[doc_id] += np.sqrt(doc_freq) * idf_2
                     query_matches[doc_id] += 1
@@ -207,7 +249,6 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             # Our assumption is that one repo is a fork of another if:
             # 1. They have the same repo description (raw) and repo name (derived from url).
             
-            doc_norm_set = set()
             name_to_description = collections.defaultdict(set)
             
             clean_reply = []
@@ -223,6 +264,10 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                     doc_metadata = metadata_index[doc_id]
                     if DESCRIPTION_INDEX in doc_metadata:
                         doc_description = doc_metadata[DESCRIPTION_INDEX]
+                        # Simple description normalization.
+                        if len(doc_description) > 0 and doc_description[-1] == '.':
+                            doc_description = doc_description[:-1]
+                        #
                         if doc_description not in name_to_description[doc_name]:
                             name_to_description[doc_name].add(doc_description)
                             add_to_clean = True
@@ -277,6 +322,8 @@ if __name__ == '__main__':
     ID_TO_LINK_MAP_PATH = os.path.join('data', 'id_to_link_map.json')
     # Path to the metadata index.
     METADATA_INDEX_PATH = os.path.join('data', 'metadata_index.json')
+    # Path to the repos flagged as non-repos.
+    FLAGGED_NON_REPOS_PATH = os.path.join('data', 'flagged_as_non_repo.json')
     
     # The maximum number of documents to return in a single reply.
     MAX_REPLY_SIZE = 25
@@ -367,6 +414,14 @@ if __name__ == '__main__':
     metadata_index = {}
     if USE_METADATA_INDEX:
         metadata_index = json.load(open(METADATA_INDEX_PATH))
+        
+    ###
+    # Load repos flagged as non-repos.
+    ###
+ 
+    print '====='
+    print 'Loading repos flagged as non-repos...'
+    flagged_as_non_repo = set(json.load(open(FLAGGED_NON_REPOS_PATH)))
       
     ###
     # Bind and listen for incoming requests.
@@ -400,6 +455,6 @@ if __name__ == '__main__':
             (conn, lda_model, dictionary, \
             label_map, TOPIC_INDEX_ROOT, PERCENT_WINDOW, \
             inverted_index, MAX_REPLY_SIZE, \
-            TFIDF_UPPER_THRESHOLD_SIZE, id_to_link_map, NUM_DOCS, metadata_index))
+            TFIDF_UPPER_THRESHOLD_SIZE, id_to_link_map, NUM_DOCS, metadata_index, flagged_as_non_repo))
      
     s.close()
