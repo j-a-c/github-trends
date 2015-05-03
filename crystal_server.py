@@ -209,7 +209,14 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             # Search inverted index.
             # We will sort by the inverted index hash.
             search_start_time = time.time()
+            num_tokens_considered = 0
             for token in sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
+                num_tokens_considered += 1
+                
+                # Reduce the number of tokens to consider.
+                # No capital letters, no ':' (we have cleaned these!).
+                if token[0].isupper() or ':' in token:
+                    continue
                 
                 if time.time() - search_start_time > MAX_QUERY_TIME:
                     break
@@ -275,6 +282,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             # Sort from greatest score to least score.
             reply = [(doc_id, document_scores[doc_id]) for doc_id in document_scores]
             reply.sort(key=lambda tup: tup[1], reverse = True)
+            print '\tTokens considered:', num_tokens_considered
             print '\tNumber of raw matches:', len(reply)            
             
             # Remove forked projects from results.
