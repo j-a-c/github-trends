@@ -210,6 +210,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             # We will sort by the inverted index hash.
             search_start_time = time.time()
             num_tokens_considered = 0
+                        
             for token in sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
                 num_tokens_considered += 1
                 
@@ -293,6 +294,11 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             
             clean_reply = []
             for t in reply:
+            
+                # Stop early once we get enough results.
+                if len(clean_reply)  > max_reply_size:
+                    break
+            
                 doc_id = t[0]
                 doc_url = id_to_link_map[doc_id]
                 # Name is last part of the url.
@@ -317,9 +323,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             
             reply = clean_reply
             
-            print '\tNumber of de-forked matches:', len(reply)
-            if len(reply) > max_reply_size:
-                reply = reply[:max_reply_size]                
+            print '\tReply length:', len(reply)            
     
         # The API does not recognize the request.
         else:
