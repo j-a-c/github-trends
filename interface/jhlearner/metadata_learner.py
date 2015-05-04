@@ -137,9 +137,11 @@ def get_repo(repo_url, username, pw):
   response1 = requests.get(stats_url, auth=(username, pw))
   json_data1 = response1.json()
 
-  readme_content = get_readme_content(repo_url, username, pw)
+  #readme_content = get_readme_content(repo_url, username, pw)
 
-  tokens = ' '.join(dedup(tokenize(readme_content)))
+  # tokens = ' '.join(dedup(tokenize(readme_content)))
+
+
 
   obj = {
     'full_name': json_data1['full_name'],
@@ -149,8 +151,8 @@ def get_repo(repo_url, username, pw):
     'forks_count': json_data1['forks_count'],
     'issues_count': json_data1['open_issues_count'],
     'repo_size': json_data1['size'],
-    'readme_content': readme_content,
-    'tokens': tokens,
+    #'readme_content': readme_content,
+    #'tokens': tokens,
   }
 
   return obj

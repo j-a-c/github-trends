@@ -79,6 +79,7 @@ def update_repos_keyword_input(similar_repos):
   updated_repos = []
   for repo in similar_repos:
     repo_url = repo[0].strip()
+    # pdb.set_trace()
     new_repo = ml.get_repo(repo_url, app.config["GITHUB_ID"], app.config["GITHUB_PW"])
 
     updated_repo = {
