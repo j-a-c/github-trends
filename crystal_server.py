@@ -241,7 +241,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                 if num_docs_containing_token > tfidf_upper_threshold or num_docs_containing_token == 0:
                     # Search url_token_index.
                     if token in url_token_index:
-                        effective_query_tokens.add(token)
+                        #effective_query_tokens.add(token)
                         for repo_id in url_token_index[token]:
                             doc_id = str(repo_id)
                             document_scores[doc_id] += LUCENE_URL_MATCH_BONUS
