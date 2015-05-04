@@ -110,3 +110,11 @@ button.btn-submit:focus {
   padding-top: 10px;
 }
 
+.code-repo-only {
+  z-index: 100;
+}
+
+.floating-tags {
+  z-index: -100;
+}
+

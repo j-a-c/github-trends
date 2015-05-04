@@ -1,6 +1,6 @@
 $(function() {
   $(".btn-submit").click(function(e) {
-    $(this).toggle();
+    //$(this).toggle();
     $('.loading-btn').toggle();
 
     /* HOWON: GET RID OF URL SEARCH

@@ -141,19 +141,22 @@ def get_repo(repo_url, username, pw):
 
   # tokens = ' '.join(dedup(tokenize(readme_content)))
 
+  #pdb.set_trace()
 
-
-  obj = {
-    'full_name': json_data1['full_name'],
-    "description": json_data1['description'],
-    'stars_count': json_data1['stargazers_count'],
-    'watchers_count': json_data1['watchers_count'],
-    'forks_count': json_data1['forks_count'],
-    'issues_count': json_data1['open_issues_count'],
-    'repo_size': json_data1['size'],
-    #'readme_content': readme_content,
-    #'tokens': tokens,
-  }
+  try:
+    obj = {
+      'full_name': json_data1['full_name'],
+      "description": json_data1['description'],
+      'stars_count': json_data1['stargazers_count'],
+      'watchers_count': json_data1['watchers_count'],
+      'forks_count': json_data1['forks_count'],
+      'issues_count': json_data1['open_issues_count'],
+      'repo_size': json_data1['size'],
+      #'readme_content': readme_content,
+      #'tokens': tokens,
+    }
+  except:
+    obj = {}
 
   return obj
 
