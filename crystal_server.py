@@ -48,6 +48,9 @@ EMPTY_TOPIC = '___'
 # Weighting parameters
 LUCENE_URL_MATCH_BONUS = 10
 
+# Max query time in seconds.
+MAX_QUERY_TIME = 5
+
 def tokenize(text):
     return [token for token in gensim.utils.simple_preprocess(text) if token not in gensim.parsing.preprocessing.STOPWORDS]
 
@@ -195,7 +198,16 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             print 'Requested: GET_SIMILAR_REPOS_BY_LUCENE'
             readme_text = tokenize(data[1])     # Tokenize data the same way it was tokenized for the index.
             readme_text.extend(data[1].split()) # Simple whitespace tokenization for user/project search.
-            query_tokens = set(readme_text)
+            
+            # Process tokens in the order they are presented.
+            # The idea is that for a complete readme, the import text is in the beginning.
+            # If we do not have time to process all the text, at least we might get the important stuff.
+            tokens_already_seen = set()
+            query_tokens = []
+            for token in readme_text:
+                if token not in tokens_already_seen:
+                    query_tokens.append(token)
+                    tokens_already_seen.add(token)
             
             options = data[2]
             
@@ -205,7 +217,23 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             
             # Search inverted index.
             # We will sort by the inverted index hash.
+            search_start_time = time.time()
+            num_tokens_considered = 0
+                        
+            #for token in query_tokens: #sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
             for token in sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
+                num_tokens_considered += 1
+                
+                # Reduce the number of tokens to consider.
+                # No capital letters, no ':' (we have cleaned these!).
+                if token[0].isupper() or ':' in token:
+                    continue
+                
+                if time.time() - search_start_time > MAX_QUERY_TIME:
+                    break
+        
+        
+                token_start_time = time.time()
                 docs_containing_token = inverted_index[token]
                 num_docs_containing_token = len(docs_containing_token)
                 
@@ -218,10 +246,10 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                             doc_id = str(repo_id)
                             document_scores[doc_id] += LUCENE_URL_MATCH_BONUS
                             query_matches[doc_id] += 1
+                    else:
+                        print '\t\tBad token:', token
                     continue
                     
-                print '\t', token
-                
                 effective_query_tokens.add(token)
                 
                 idf_2 = (1 + np.log10(num_docs / (num_docs_containing_token + 1)))**2
@@ -243,6 +271,8 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                         doc_id = str(repo_id)
                         # -_- Sigh
                         document_scores[doc_id] += LUCENE_URL_MATCH_BONUS
+                        
+                print '\t', token, num_docs_containing_token, time.time() - token_start_time
                     
             num_effective_query_tokens = len(effective_query_tokens)
 
@@ -263,8 +293,11 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                             document_scores[doc_id] *= np.log10(doc_metadata[CONTRIB_INDEX])
             
             # Sort from greatest score to least score.
+            print 'Forming list...'
             reply = [(doc_id, document_scores[doc_id]) for doc_id in document_scores]
+            print 'Sorting...'
             reply.sort(key=lambda tup: tup[1], reverse = True)
+            print '\tTokens considered:', num_tokens_considered
             print '\tNumber of raw matches:', len(reply)            
             
             # Remove forked projects from results.
@@ -275,6 +308,11 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             
             clean_reply = []
             for t in reply:
+            
+                # Stop early once we get enough results.
+                if len(clean_reply)  > max_reply_size:
+                    break
+            
                 doc_id = t[0]
                 doc_url = id_to_link_map[doc_id]
                 # Name is last part of the url.
@@ -299,9 +337,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             
             reply = clean_reply
             
-            print '\tNumber of de-forked matches:', len(reply)
-            if len(reply) > max_reply_size:
-                reply = reply[:max_reply_size]                
+            print '\tReply length:', len(reply)            
     
         # The API does not recognize the request.
         else:
