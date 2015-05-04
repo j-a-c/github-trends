@@ -151,6 +151,7 @@ def analysis():
 
 
     while (len(similar_repos) < 1) and num_trys < 10:
+      num_trys += 1
       if is_code_only:
         similar_repos = api.get_similar_repos_by_lucene(keyword, show_non_repos=False)[:5]
       else:
