@@ -93,7 +93,7 @@ class Index(object):
         """
         return self.get(token)
         
-    def get(self, token):
+    def get(self, token, cache=True):
         """
         Arguments:
             token - a token to query the inverted index for.
@@ -119,11 +119,15 @@ class Index(object):
             if not os.path.isfile(temp_path):
                 return []
             
-            self.lru = json.load(open(temp_path))
-            self.lru_hash = self.get_hash_from_filename(temp_path)
+            lru = json.load(open(temp_path))
+            lru_hash = self.get_hash_from_filename(temp_path)
 
-            if token in self.lru:
-                return self.fix_bug(self.lru[token])
+            if cache:
+                self.lru = lru
+                self.lru_hash = lru_hash
+            
+            if token in lru:
+                return self.fix_bug(lru[token])
             else: return []
 
     def fix_bug(self, entry):

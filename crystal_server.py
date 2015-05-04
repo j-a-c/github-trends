@@ -198,7 +198,16 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             print 'Requested: GET_SIMILAR_REPOS_BY_LUCENE'
             readme_text = tokenize(data[1])     # Tokenize data the same way it was tokenized for the index.
             readme_text.extend(data[1].split()) # Simple whitespace tokenization for user/project search.
-            query_tokens = set(readme_text)
+            
+            # Process tokens in the order they are presented.
+            # The idea is that for a complete readme, the import text is in the beginning.
+            # If we do not have time to process all the text, at least we might get the important stuff.
+            tokens_already_seen = set()
+            query_tokens = []
+            for token in readme_text:
+                if token not in tokens_already_seen:
+                    query_tokens.append(token)
+                    tokens_already_seen.add(token)
             
             options = data[2]
             
@@ -211,6 +220,7 @@ def client_thread(conn, lda_model, dictionary, label_map, \
             search_start_time = time.time()
             num_tokens_considered = 0
                         
+            #for token in query_tokens: #sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
             for token in sorted(list(query_tokens), key = lambda t: inverted_index.index_hash(t)):
                 num_tokens_considered += 1
                 
@@ -222,6 +232,8 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                 if time.time() - search_start_time > MAX_QUERY_TIME:
                     break
         
+        
+                token_start_time = time.time()
                 docs_containing_token = inverted_index[token]
                 num_docs_containing_token = len(docs_containing_token)
                 
@@ -238,8 +250,6 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                         print '\t\tBad token:', token
                     continue
                     
-                print '\t', token
-                
                 effective_query_tokens.add(token)
                 
                 idf_2 = (1 + np.log10(num_docs / (num_docs_containing_token + 1)))**2
@@ -261,6 +271,8 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                         doc_id = str(repo_id)
                         # -_- Sigh
                         document_scores[doc_id] += LUCENE_URL_MATCH_BONUS
+                        
+                print '\t', token, num_docs_containing_token, time.time() - token_start_time
                     
             num_effective_query_tokens = len(effective_query_tokens)
 
@@ -281,7 +293,9 @@ def client_thread(conn, lda_model, dictionary, label_map, \
                             document_scores[doc_id] *= np.log10(doc_metadata[CONTRIB_INDEX])
             
             # Sort from greatest score to least score.
+            print 'Forming list...'
             reply = [(doc_id, document_scores[doc_id]) for doc_id in document_scores]
+            print 'Sorting...'
             reply.sort(key=lambda tup: tup[1], reverse = True)
             print '\tTokens considered:', num_tokens_considered
             print '\tNumber of raw matches:', len(reply)            
