@@ -95,3 +95,10 @@ button.btn-submit:focus {
   background-color: #EB974E;
   color: white;
 }
+
+.loading-btn {
+  font-size: 30px;
+  color: white;
+  display: none;
+}
+
