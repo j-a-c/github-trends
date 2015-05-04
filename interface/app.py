@@ -152,9 +152,9 @@ def analysis():
 
     while (len(similar_repos) < 1) and num_trys < 10:
       if is_code_only:
-        similar_repos = api.get_similar_repos_by_lucene(keyword, show_non_repos=False)[:10]
+        similar_repos = api.get_similar_repos_by_lucene(keyword, show_non_repos=False)[:5]
       else:
-        similar_repos = api.get_similar_repos_by_lucene(keyword)[:10]
+        similar_repos = api.get_similar_repos_by_lucene(keyword)[:5]
 
     similar_repos = update_repos_keyword_input(similar_repos)
 
@@ -177,7 +177,7 @@ def analysis():
         query_arr.append(query)      
       similar_repos = api.get_similar_repos_by_topic(query_arr)
 
-    similar_repos = update_repos_tags_input(similar_repos[:10])  
+    similar_repos = update_repos_tags_input(similar_repos[:5])  
 
   else:
     repo, similar_repos = None, []
