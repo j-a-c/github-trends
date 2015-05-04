@@ -55,3 +55,8 @@ docs/_build/
 
 # PyBuilder
 target/
+
+
+interface/settings.cfg
+model/
+data/

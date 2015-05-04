@@ -102,3 +102,11 @@ button.btn-submit:focus {
   display: none;
 }
 
+.checkbox {
+  margin: 0 auto;
+  width: 50%;
+  text-align: right;
+  color: white;
+  padding-top: 10px;
+}
+

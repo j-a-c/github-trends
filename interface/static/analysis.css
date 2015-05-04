@@ -117,4 +117,5 @@ button.show-tokens:focus {
 
 h5, h4, h3, h2, h1 {
   font-family: Bikobold;
+  text-transform: uppercase;
 }

@@ -3,7 +3,7 @@ $(function() {
     $(this).toggle();
     $('.loading-btn').toggle();
 
-    //var regex = new RegExp("^(http[s]?:\\/\\/(www\\.)?|ftp:\\/\\/(www\\.)?|www\\.){1}([0-9A-Za-z-\\.@:%_\+~#=]+)+((\\.[a-zA-Z]{2,3})+)(/(.)*)?(\\?(.)*)?");
+    /* HOWON: GET RID OF URL SEARCH
     var repoUrl = $('input.search').val();
     if (repoUrl && repoUrl.indexOf("github.com") > 0) {
       document.location = "analysis?repo_url=" + repoUrl;
@@ -15,7 +15,29 @@ $(function() {
       } else {
         alert("wrong input")
       }
-    }
+    } */
+
+    var keyword = $('input.search').val();
+    if (keyword) {
+      if ($('.code-repo-only').prop("checked")) {
+        var code_only = "&codeonly=1";
+        //debugger
+        document.location = "analysis?keyword=" + encodeURIComponent(keyword) + code_only;
+
+      } else {
+        document.location = "analysis?keyword=" + encodeURIComponent(keyword);  
+      }
+      
+    } else {
+      var tag_arr = $(".autocomplete").data("arr");
+      if (tag_arr.length) {
+        params = tag_arr.join(',');
+        document.location = "analysis?tags="+params;
+      } else {
+        alert("wrong input")
+      }
+    } 
+
   });
 
   var countries = [
